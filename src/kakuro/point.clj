@@ -7,3 +7,6 @@
 
 (defrecord Point [x y])
 
+(defn point-matches? [ref val point]
+  "true if val equals the value for ref being :x or :y. (point-matches? :x 4) is true for (Point. 4 3)"
+  (= (ref point) val))

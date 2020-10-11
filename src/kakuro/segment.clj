@@ -1,8 +1,6 @@
 (ns kakuro.segment
-  (:require [kakuro.point :refer :all][kakuro.cell :refer :all]))
-;;  (:use [kakuro.point][kakuro.cell]))
-
-
+  (:require [kakuro.point :as pt]
+            [kakuro.util :as util]))
 
 ;; ----------------------------------------------------------------------
 ;; A segment is a part of a row or a column, stretching from from-a to
@@ -21,13 +19,36 @@
 (defn row-segment [from-x to-x y sum]
   (Segment. :h from-x to-x y sum))
 
+(defn is-row-segment? [segment]
+  "true, if orientation is :h"
+  (= (:orientation segment) :h))
+
+
+(defn pt-on-seg? [point segment pt-a pt-b]
+  "helper predicate as generic implementation with provided retrievers"
+  (and
+   (= (pt-b point) (:b segment))
+   (util/betweenl (pt-a point) (:from-a segment)(:to-a segment))))
+
+(defn contains-point? [point segment]
+  "true, if point is in segment"
+  (case (:orientation segment)
+    :h (pt-on-seg? point segment :x :y)
+    :v (pt-on-seg? point segment :y :x)
+    ))
+  
+(defn point-segments [point segments]
+  "retrieves the potential 2 segments a point belongs to: one row, one column"
+  (filterv (partial contains-point? point) segments))
+
+
 (defn create-points-from-segment [segment]
   (let [type (:orientation segment)
         from-a (:from-a segment)
         to-a (:to-a segment)
         b (:b segment)]
     (case type
-      :h (mapv #(->Point %1 b) (range from-a (inc to-a)))
-      :v (mapv #(->Point %1 b) (range from-a (inc to-a)))
+      :h (mapv #(pt/->Point %1 b) (range from-a (inc to-a)))
+      :v (mapv #(pt/->Point b %1) (range from-a (inc to-a)))
       [])))
 
