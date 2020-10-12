@@ -3,6 +3,7 @@
             [kakuro.cell :as ce]
             [kakuro.segment :as seg]
             [kakuro.util :as util]
+            [clojure.pprint :as cpp]
             ))
 
 ;; ----------------------------------------------------------------------
@@ -15,9 +16,13 @@
 
 (defrecord Puzzle [cells segments])
 
+
 (defn count-potential-grids [cells]
   "count the number of potential grids: multiply the number of values of each cell"
   (reduce * 1 (map count (map :values cells))))
+
+
+
 
 (defn get-puzzle-state [puzzle current-cell]
   "returns a state for the puzzle:
@@ -35,6 +40,11 @@
   )
 
 
+
+(defn print-puzzle [puzzle]
+  "Helper to print"
+  (cpp/pprint puzzle)
+  (println "Combinations to check: " (count-potential-grids (:cells puzzle))))
 
 (defn create-puzzle [segments min max]
   "creates a puzzle as cells from the row segments in segments and from the segments" 
