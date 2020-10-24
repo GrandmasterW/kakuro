@@ -44,14 +44,47 @@
     (is (not (grid/is-open-point? gr2 p2))))))
 
 (deftest open-grid-points-test
-  (testing ""
-    (is false)))
+  (let [p1 (pt/->Point 1 1)
+        p2 (pt/->Point 2 1)
+        pts #{p1 p2}
+        rs (seg/create-row-segment 1 2 1 3 pts)
+        gr {p1 #{2} p2 (into #{} (range 1 10))}
+        gr2 (assoc gr p2 #{1})
+        result1 (grid/open-grid-points gr)
+        result2 (grid/open-grid-points gr2)
+        ]
+  (testing "find p2 as one and only"
+    (is (and (= (count result1) 1)
+             (= (first result1) p2))))
+  (testing "find nothing in gr2"
+    (is (empty? result2)))))
 
 (deftest fixed-grid-points-test
-  (testing ""
-    (is false)))
+  (let [p1 (pt/->Point 1 1)
+        p2 (pt/->Point 2 1)
+        pts #{p1 p2}
+        rs (seg/create-row-segment 1 2 1 3 pts)
+        gr {p1 #{2} p2 (into #{} (range 1 10))}
+        gr2 (assoc gr p2 #{1})
+        result1 (grid/fixed-grid-points gr)
+        result2 (into #{} (grid/fixed-grid-points gr2))
+        ]
+  (testing "find p1 in grid 1"
+    (is (= (count result1) 1))
+    (is (= (first result1) p1)))
+  (testing "find p1 and p2 in grid1"
+    (is (= (count result2) 2))
+    (is (every? (partial contains? result2) pts)))))
 
 (deftest segment-value-sum-test
-  (testing ""
-    (is false)))
-
+  (let [p1 (pt/->Point 1 1)
+        p2 (pt/->Point 2 1)
+        pts #{p1 p2}
+        rs (seg/create-row-segment 1 2 1 3 pts)
+        gr {p1 #{2} p2 (into #{} (range 1 10))}
+        gr2 (assoc gr p2 #{1})
+        ]
+  (testing "sum of result1 should be 2"
+    (is (= (grid/segment-value-sum gr rs) 2)))
+  (testing "sum of result2 shoud be 3"
+    (is (= (grid/segment-value-sum gr2 rs) 3)))))
