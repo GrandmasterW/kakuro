@@ -1,47 +1,50 @@
 (ns kakuro.grid
-  (:require [kakuro.util :refer :all]
-            [kakuro.constraints :as constr]))))
+;;  (:require [kakuro.util :as util] [kakuro.cell :as cell] [kakuro.point :as pt][kakuro.segment :as seg])
+            )
 
-;; A kakuro grid is a matrix where each cell may contain values 1..9
-;; A puzzle will contain restrictions for each row and for each column in terms of the sum which has to be fulfilled.
-;; Hence a sum of 5 for two cells can be obtained by: (1 4) (2 3) (3 2) (4 1)
-;; These functions construct an empty grid, the constraints for each row and column, and for each cell a set of valid digits.
-;; Digits are less then the column sum and less then row sum.
-;; To make it worse, each row or column can consist of individual segments, hence constraints apply for the segment.
+;; ----------------------------------------------------------------------
+;; A grid is simply a hashmap of point -> cell, as we need to retrieve
+;; values of a cell by points.
 ;;
-;; a point consists of coordinates: [1 2] where x in 1..xmax and y in 1..ymax
-;; a cell consists of a point and the list of potential values, organized in the grid map:
-;; { [1 1] [1 2 3 4 5 6 7 8 9]
-;;   [2 1] [1 2 3 4 5 6 7 8 9]}
-
-(defn create-point [x y]
-  "creates one cell as a vector of coordinates"
-  [x y])
+;; This file provides a set of helpers and access functions to deal with
+;; grid stuff.
+;; ----------------------------------------------------------------------
 
 
+(defn make-empty-grid [] {})
 
-(defn create-segment-points [[from-x to-x y]]
-  "creates a vector of points from one row-segment"
-  (mapv
-   #(create-point %1 y)
-   (range from-x (inc to-x))))
+(defn get-points-from-grid [grid]
+  "returns a set of point values, i.e. the unique keys of grid"
+  (into #{} (keys grid)))
 
-(defn create-points-for-segments [row-segments]
-  "creates a vector of points, for each row-segment"
-  (into []
-        (mapcat create-segment-points row-segments)))
+(defn value-string [values]
+  "returns a simple string for the values: if only one digit is left, use that. If more than one, return ?"
+  (if (= (count values) 1)
+    (str (first values))
+    "?"))
 
-(defn create-initial-cells [row-segments min-value max-value]
-  "creates a map with key point and a list of potential values, starting with min-value"
-  (let [values (into [] (range min-value (inc max-value)))
-        points (create-points-for-segments row-segments)]
-    (reduce merge (map #(hash-map %1 values) points)))) 
+(defn is-open-point? [grid point]
+  "true, if point has more than one value in set"
+  (> (count (get grid point)) 1))
 
+(defn open-grid-points
+  ([grid]
+   "returns all open points from the grid"
+   (open-grid-points grid (keys grid)))
+  ([grid points]
+   "returns the open points from the given collection"
+   (filterv (partial is-open-point? grid) points)))
 
-(defn create-basic-grid [row-segments constraints]
-  "creates a map containing the :cells as a map of cells and :constraints as a list of constraints"
-  (let [initial-cells (create-initial-cells row-segments 1 9) ; change 1 and 9 to something later...
-        cells (constr/apply-constraints initial-cells constraints)]
-    (hash-map :cells cells :constraints constraints)))
+(defn fixed-grid-points
+  ([grid]
+   "returns all non-open points from the grid"
+   (fixed-grid-points grid (keys grid)))
+  ([grid points]
+   "returns the non-open points from the given collection"
+   (filterv (comp not (partial is-open-point? grid)) points)))
 
+(defn segment-value-sum [grid segment]
+  "computes the sum of the values which are non-open, i.e. set to a single value"
+  (let [fixed (fixed-grid-points grid (:points segment))]
+    (reduce + 0 (map (comp first (partial get grid)) fixed))))
 
