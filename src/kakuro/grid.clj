@@ -32,7 +32,7 @@
    "returns all open points from the grid"
    (open-grid-points grid (keys grid)))
   ([grid points]
-   "returns the open points from the given collection"
+   "returns a collection of open points from the given collection"
    (filterv (partial is-open-point? grid) points)))
 
 (defn fixed-grid-points
