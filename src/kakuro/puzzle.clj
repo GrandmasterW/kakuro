@@ -55,6 +55,27 @@
     (dotimes [c (first dimensions)]
       (println (clojure.string/join (map #(str-pt grid points %1 (inc c)) (util/fullrange 1 x-max)))))))
       
+(defn is-open-puzzle? [puzzle]
+  "True, if at least one open point on the grid"
+  (not (empty? (grid/open-grid-points (:grid puzzle)))))
+
+(defn vals-unique? [grid segment]
+  "True, if each value of each segment point only appears once"
+  (let [points (:points segment)
+        value-sets (mapv (partial get grid) points)]
+    (and (every? #(= (count %1) 1) value-sets)
+         (every? (partial = 1) (vals (frequencies (mapv first value-sets)))))))
+         
+
+
+(defn is-final-valid? [puzzle]
+  "check all constraints: segment sums, uniqueness of digits"
+  (let [grid (:grid puzzle)
+        segments (:segments puzzle)
+        all-sums-met? (every? #(= (:sum %1) (grid/segment-value-sum grid %1)) segments)
+        all-vals-unique? (every? (partial vals-unique? grid) segments)]
+    (and all-sums-met? all-vals-unique?)))
+    
 
 
 

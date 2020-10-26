@@ -48,6 +48,30 @@
         new-grid (reduce reduce-grid-part {} grid-parts)]
     (assoc puzzle :grid new-grid)))
 
+(declare solve)
+
+(defn collect-solutions [solutions new-solutions]
+  "Returns a cleaned vector of solutions, enriched by new-solutions"
+  (if (and new-solutions (not (empty? new-solutions)))
+    (concat solutions new-solutions)
+    solutions))
+  
+(defn iterate-values-at [puzzle solutions first-open-point]
+  "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
+  (let [values (get (:grid puzzle) first-open-point)
+        v-puzzles (map #(assoc-in puzzle [:grid first-open-point] #{%1}) values)
+        v-solutions (map #(solve %1 solutions) v-puzzles)]
+    (collect-solutions solutions v-solutions)))
+
+(defn iterate-open-points [puzzle solutions open-points]
+  "Walks through the open points and computes them at each step"
+  (if (or (nil? open-points)(empty? open-points))
+    solutions
+    (recur
+     puzzle
+     (collect-solutions solutions (iterate-values-at puzzle solutions (first open-points)))
+     (grid/open-grid-points (:grid puzzle)))))
+
 (defn solve
   ([puzzle]
    "returns a collection of grids that are solutions for the puzzle, each having only one value for each grid cell, matching all criteria"
@@ -56,15 +80,14 @@
      ;; consider the first point of those, use it's first value to proceed: 
      ;; in each run: restrict the values in the new grid.
      ;;
-     (solve start-puzzle [])))
+     (trampoline solve start-puzzle [])))
   ([puzzle solutions]
    "worker"
-   (if-let [open-points (grid/open-grid-points (:grid puzzle))]
-;;     (loop [current-val (get-in puzzle [:grid (first open-points)])
-;;            solutions solutions]
-       ;;
- ;;      (when (some identity open-points)
- ;;        (util/log (str "val:" current-val))
-  ;;       (recur (
-     [])))
+   (if (pu/is-open-puzzle? puzzle) ;; shall we continue?
+     (iterate-open-points puzzle solutions (grid/open-grid-points (:grid puzzle)))
+     (if (pu/is-final-valid? puzzle) ;; abort the puzzle, as it is no longer open. 
+       (collect-solutions solutions [(:grid puzzle)]) ;; save it 
+       solutions))) ;; else just stop and return
+  ) ; the end. 
+     
 
