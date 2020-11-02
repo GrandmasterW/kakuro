@@ -1,8 +1,7 @@
 (ns kakuro.puzzle
   (:require
-   ;;   [kakuro.point :as pt] [kakuro.segment :as seg]
    [kakuro.util :as util]
-   [kakuro.grid :as grid]
+   [kakuro.grid :as gr]
    [kakuro.point :as pt]
    [clojure.pprint :as cpp]
    ))
@@ -16,69 +15,44 @@
 ;; ----------------------------------------------------------------------
 
 
-(defrecord Puzzle [grid segments min max])
+;; (defrecord Puzzle [grid segments min max])
+
+(defn ->Puzzle  [grid segments min max]
+  {:grid grid
+   :segments segments
+   :min min
+   :max max})
+
 
 (defn puzzle-dimensions [puzzle]
   "returns a vector of x and y maximum dimensions, i.e. the max x and max y value of contained points"
   (let [points (keys (:grid puzzle))]
-    [(reduce max (map :x points))
-     (reduce max (map :y points))]))
+    [(reduce max 0 (map :x points))
+     (reduce max 0 (map :y points))]))
 
 (defn count-potential-solutions [puzzle]
   "count the number of potential solutions by multipling the number of values of each cell"
   (reduce * 1 (map count (vals (:grid puzzle)))))
 
-(defn print-puzzle-stats [puzzle]
-  "Helper to print"
-  (let [grid (:grid puzzle)
-        points (keys grid)
-        dimensions (puzzle-dimensions puzzle)]
-  (println "Number cells:\t" (count points))
-  (println "Grid points:\t" (clojure.string/join " " (map pt/str-point points)))
-  (println "Max x:y:\t" (first dimensions) ":" (second dimensions))
-  (println "Segments:\t" (count (:segments puzzle)))
-  (println "Combinations to check:\t" (count-potential-solutions puzzle))))
 
-(defn- str-pt [grid points x y]
-  "return a string for point at x,y: # if not in grid, digit or ? if in grid"
-  (let [p (pt/->Point x y)]
-    (if (contains? points p)
-      (grid/value-string (get grid p))
-      "#")))
-
-(defn print-puzzle [puzzle]
-  "creates strings for each row and prints them line by line"
-  (let [dimensions (puzzle-dimensions puzzle)
-        x-max (first dimensions)
-        grid (:grid puzzle)
-        points (into #{} (keys grid))]
-    (dotimes [c (first dimensions)]
-      (println (clojure.string/join (map #(str-pt grid points %1 (inc c)) (util/fullrange 1 x-max)))))))
-      
 (defn is-open-puzzle? [puzzle]
   "True, if at least one open point on the grid"
-  (not (empty? (grid/open-grid-points (:grid puzzle)))))
+  (not (empty? (gr/open-grid-points (:grid puzzle)))))
 
-(defn vals-unique? [grid segment]
-  "True, if each value of each segment point only appears once"
-  (let [points (:points segment)
-        value-sets (mapv (partial get grid) points)]
-    (and (every? #(= (count %1) 1) value-sets)
-         (every? (partial = 1) (vals (frequencies (mapv first value-sets)))))))
-         
+(defn first-open-point [puzzle]
+  "Find the first open point on the puzzle, if any. Order them by x asc"
+  (let [ops (gr/open-grid-points (:grid puzzle))]
+    (if (and ops (not (empty? ops)))
+      (first (sort-by first ops)))))
 
-
-(defn is-final-valid? [puzzle]
-  "check all constraints: segment sums, uniqueness of digits"
-  (let [grid (:grid puzzle)
-        segments (:segments puzzle)
-        all-sums-met? (every? #(= (:sum %1) (grid/segment-value-sum grid %1)) segments)
-        all-vals-unique? (every? (partial vals-unique? grid) segments)]
-    (and all-sums-met? all-vals-unique?)))
-    
-
-
-
-
+(defn is-puzzle-valid? [puzzle]
+  "True, if all constraints are met: segment sums equal value sums, digits in a segment are unique"
+  (let [pgrid (:grid puzzle)
+        segments (:segments puzzle)]
+    (and
+     (not (is-open-puzzle? puzzle)) ; cannot be open to be valid!
+     (every? #(= (:sum %1) (gr/segment-value-sum pgrid %1)) segments) ; all sums met?
+     (every? (partial gr/segment-values-unique? pgrid) segments)) ; all digits unique?
+    ))
 
 

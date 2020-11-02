@@ -13,17 +13,28 @@
 ;; up lookup when processing solutions
 ;; ----------------------------------------------------------------------
 
-(defrecord Segment [orientation from-a to-a b sum points])
+;;(defrecord Segment [orientation from-a to-a b sum points])
+
+(defn ->Segment [orientation from-a to-a b sum points]
+  {
+   :orientation orientation
+   :from-a from-a
+   :to-a to-a
+   :b b
+   :sum sum
+   :points points
+   })
+
 
 (defn- create-segment [orientation from-a to-a b sum points]
   "helper to create empty set for points"
-  (Segment. orientation from-a to-a b sum (if points points #{})))
+  (->Segment orientation from-a to-a b sum (if points points #{})))
 
 (defn create-column-segment [from-y to-y x sum points]
   (create-segment :v from-y to-y x sum points))
 
 (defn create-row-segment [from-x to-x y sum points]
-    (create-segment :h from-x to-x y sum points))
+  (create-segment :h from-x to-x y sum points))
 ;;
 ;; predicates
 ;;

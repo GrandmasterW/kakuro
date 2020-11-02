@@ -17,8 +17,8 @@
         to-a (:to-a segment)
         b (:b segment)
         pcf (case type
-              :h #(pt/->Point %1 b)
-              :v #(pt/->Point b %1))]
+              :h #(pt/Point %1 b)
+              :v #(pt/Point b %1))]
     (mapv pcf (range from-a (inc to-a)))))
 
 (defn create-all-points [segments]

@@ -1,6 +1,7 @@
 (ns kakuro.grid
 ;;  (:require [kakuro.util :as util] [kakuro.cell :as cell] [kakuro.point :as pt][kakuro.segment :as seg])
-            )
+  (:require [kakuro.util :as util]
+            ))
 
 ;; ----------------------------------------------------------------------
 ;; A grid is simply a hashmap of point -> cell, as we need to retrieve
@@ -18,10 +19,11 @@
   (into #{} (keys grid)))
 
 (defn value-string [values]
-  "returns a simple string for the values: if only one digit is left, use that. If more than one, return ?"
-  (if (= (count values) 1)
-    (str (first values))
-    "?"))
+  "Returns a string for the values: if only one digit is left, use that, preceeded by a point. If more than one, return # plus digit of number of values. Empty list: !!"
+  (cond
+      (empty? values) "!!"
+      (= (count values) 1) (str "." (first values))
+      :default (str "#" (count values))))
 
 (defn is-open-point? [grid point]
   "true, if point has more than one value in set"
@@ -46,5 +48,26 @@
 (defn segment-value-sum [grid segment]
   "computes the sum of the values which are non-open, i.e. set to a single value"
   (let [fixed (fixed-grid-points grid (:points segment))]
-    (reduce + 0 (map (comp first (partial get grid)) fixed))))
+;;    (util/log "segment-value-sum" grid fixed)
+    (if fixed
+      (reduce + 0
+              (map (comp (partial util/first-val 0) (partial get grid)) fixed))
+      0)))
 
+(defn values-unique? [value-sets]
+  "true if each set contains only one digit, and all values of all sets appear only once"
+  (and (every? (comp (partial = 1) count) value-sets)
+       (every? (partial = 1) (vals (frequencies (mapv first value-sets))))))
+  
+(defn segment-values-unique? [grid segment]
+  "True, if each value of each segment point only appears once"
+  (let [points (:points segment)
+        value-sets (mapv (partial get grid) points)]
+    (values-unique? value-sets)))
+
+(defn is-correct-grid? [grid]
+  "True, if each point has at least one value"
+  (let [value-sets (vals grid)]
+    (every? (comp (partial < 0) count) value-sets)))
+         
+         

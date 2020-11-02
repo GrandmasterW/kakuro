@@ -18,8 +18,45 @@
      (range from (dec to) step))))
 
 
+(defn first-val [nilval coll]
+  "Returns the first value of the collection if available, otherwise nilval"
+  (if (empty? coll)
+    nilval
+    (first coll)))
+
+
+;; debug helper
+(def MAXSTEPS 1000000N)
+
+(def steps (atom 0))
+
+(defn reset-steps! []
+  (reset! steps 0))
+
+(defn inc-steps! []
+  (swap! steps inc))
+
+(defn get-steps []
+  @steps)
+
+(defn count-steps!? []
+  (do
+    (inc-steps!)
+    (> (get-steps) MAXSTEPS)))
+
+;; ----------------------------------------------------------------------
+;; ----------------------------------------------------------------------
+
 (def D-PRINT true)
 
-(defn log [str]
-  (if D-PRINT (println str)))
+(defn log
+  ([message]
+   (if D-PRINT
+     (println (get-steps) "\t" message)))
+  ([method & args]
+   (log
+    (str 
+     method "\t\t"
+     (clojure.string/join " | " args)))))
 
+;; ----------------------------------------------------------------------

@@ -1,5 +1,5 @@
 (ns kakuro.point
-  (:require [kakuro.util :as ut]))
+  (:require [kakuro.util :as util]))
 
 ;; ----------------------------------------------------------------------
 ;; Definition of points in our grid: x: 1..n, y: 1..m, so not starting
@@ -7,8 +7,11 @@
 ;; ----------------------------------------------------------------------
 
 
-(defrecord Point [x y])
+;;(defrecord Point [x y])
 
+(defn Point [x y]
+  "Create a hashmap with x and y"
+  {:x x :y y})
 
 (defn str-point
   ([p]
@@ -22,7 +25,7 @@
   (= (ref point) val))
 
 (defn- pt-between? [point a-determ b-determ from-a to-a b]
-    (and (ut/betweenl (a-determ point) from-a to-a)
+    (and (util/betweenl (a-determ point) from-a to-a)
          (= (b-determ point) b)))
 
 (defn point-between? [point coord from-a to-a b]

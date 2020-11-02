@@ -2,64 +2,60 @@
   (:require
    [kakuro.puzzle :as pu]
    [kakuro.util :as util]
+   [kakuro.patterns :as pat]
    [kakuro.point :as pt]
-   [kakuro.grid :as grid]
+   [kakuro.grid :as gr]
    [kakuro.creation :as cr]
    [kakuro.segment :as seg]
    [clojure.set :as cs]
    )
   )
 
-
-(defn comp-vmax [vmax restsum open-points]
-  "Returns the value for maximum value range"
-  (let [cnt-op (count open-points)
-        red (max (dec cnt-op) 0) ;; to reduce for open cells, but min 0 
+(defn comp-vmax [vmax restsum number-open]
+  "Returns the value for maximum value range, based on vmax as defined value maximum in puzzle, restsum of segment and number-open open-points"
+  (let [
+        red (max (dec number-open) 0) ;; to reduce for open cells, but min 0 
         cand-vmax (min vmax restsum) ;; works for one cell 
         cand-vmax2 (- cand-vmax red)]
-;;    (util/log "comp-vmax" cnt-op               red              cand-vmax              cand-vmax2)
   (max cand-vmax2 1)))
 
-
-(defn restrict-segment [puzzle segment]
-  "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
-  ;; find open points, i.e. having more than one value
+(defn comp-vrange [puzzle segment open-points]
+  "compute the value range for the open points of a segment in puzzle"
   (let [grid (:grid puzzle)
-        segpoints (:points segment)
-        open-points (grid/open-grid-points grid segpoints)
-        deductible (if (= (count open-points)(count segpoints)) 0 ; no need to compute
-                       (grid/segment-value-sum grid segment))
+        cnt-open (count open-points)
+        cnt-segpts (count (:points segment))
+        deductible (if (= cnt-open cnt-segpts) 0 ; no need to compute
+                       (gr/segment-value-sum grid segment))
         restsum (- (:sum segment) deductible)
         vmin (:min puzzle)
         vmax (:max puzzle)
-        amax (comp-vmax vmax restsum open-points) ; ensure minimum maximum... 
-        vrange (cr/create-initial-value-set vmin amax)
-        ]
-;;    (util/log "restrict-segment"  grid  vrange)
-    (into {}
-          (map
-           #(hash-map %1 (cs/intersection vrange (get grid %1)))
-           segpoints))))
+        amax (comp-vmax vmax restsum cnt-open)
+        prange (pat/get-unique-pattern restsum cnt-open)
+        vrange (cr/create-initial-value-set vmin amax)]
+    (if (and (< (count prange)(count vrange))
+             (not (empty? prange)))
+      prange
+      vrange)))
 
-
-(defn reduce-grid-point [grid [point pt-values]]
-  "If point is in grid, check if pt-values are less than existing values and use them if so."
-  (if-let [grid-vals (get grid point)]
-    (if (< (count pt-values) (count grid-vals))
-      (assoc grid point pt-values) ; new values have fewer elements, use them
-      grid) ; no need to change
-    (assoc grid point pt-values))) ; old values do not exist, use new
-
-
-(defn reduce-grid-part [grid grid-part]
-  "To be used with reduce on the grid-parts: returns the extended new-grid by checking for each point in grid-part, if it is already in res-grid and updating res-grid only, if values of new point are less then the one in new-grid. So 1/1 #{1 2 3} will be updated by 1/1 #{1 2}. In fact, it is a encapsulated reduce again."
-  (reduce reduce-grid-point grid grid-part))
+(defn restrict-segment [puzzle segment]
+  "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
+  (let [grid (:grid puzzle)
+        segpoints (:points segment)
+        open-points (gr/open-grid-points grid segpoints)
+        vrange (comp-vrange puzzle segment open-points) ]
+    (into {} (mapv
+              #(hash-map %1 (cs/intersection vrange (get grid %1)))
+              open-points)))) ;; TO DO make it better somehow. 
 
 (defn restrict-values [puzzle]
   "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle"
-  (let [grid (:grid puzzle)
-        segments (:segments puzzle)
-        grid-parts (map (partial restrict-segment puzzle) segments)
-        new-grid (reduce reduce-grid-part {} grid-parts)]
-    (assoc puzzle :grid new-grid)))
+  {:pre [(gr/is-correct-grid? (:grid puzzle))]}
+  (if (not (pu/is-open-puzzle? puzzle))
+    puzzle
+    (let [res-grid (into {}
+                         (mapv
+                          (partial restrict-segment puzzle)
+                          (:segments puzzle)))
+          new-grid (merge (:grid puzzle) res-grid)]
+      (assoc puzzle :grid new-grid))))
 

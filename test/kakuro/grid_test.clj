@@ -88,3 +88,26 @@
     (is (= (grid/segment-value-sum gr rs) 2)))
   (testing "sum of result2 shoud be 3"
     (is (= (grid/segment-value-sum gr2 rs) 3)))))
+
+
+(deftest segment-values-unique?-test
+  (testing "really unique values"
+    (let [rs (seg/create-row-segment 1 3 1 6 nil)
+          puzzle (cr/create-puzzle [rs])
+          finpuz (-> puzzle
+                     (assoc-in [:grid (pt/->Point 1 1)] #{1})
+                     (assoc-in [:grid (pt/->Point 2 1)] #{2})
+                     (assoc-in [:grid (pt/->Point 3 1)] #{3}))]
+      (is (grid/segment-values-unique? (:grid finpuz) (first (:segments finpuz))))))
+  (testing "not unique values"
+    (let [rs (seg/create-row-segment 1 3 1 6 nil)
+          puzzle (cr/create-puzzle [rs])
+          finpuz (-> puzzle
+                     (assoc-in [:grid (pt/->Point 1 1)] #{1})
+                     (assoc-in [:grid (pt/->Point 2 1)] #{1}) ; the glitch
+                     (assoc-in [:grid (pt/->Point 3 1)] #{3}))]
+      (is (not (grid/segment-values-unique?
+                (:grid finpuz)
+                (first (:segments finpuz)))))))
+  )
+

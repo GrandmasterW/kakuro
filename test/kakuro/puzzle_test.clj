@@ -18,4 +18,36 @@
       (is (= (Math/pow 9 (count (keys (:grid puzzle))))
              (* 1.0 (pu/count-potential-solutions puzzle)))))))
 
+(deftest is-open-puzzle?-test
+  (let [segs [(seg/create-row-segment 1 2 1 3 nil)
+              (seg/create-row-segment 1 2 2 4 nil)
+              (seg/create-column-segment 1 2 1 4 nil)
+              (seg/create-column-segment 1 2 2 3 nil)]
+        puzzle (cr/create-puzzle segs) ]
+    (testing "fully open / created puzzle"
+      (is (pu/is-open-puzzle? puzzle)))
+    (testing "fully set puzzle"
+      (let [testpuz (-> puzzle
+                        (assoc-in [:grid (pt/->Point 1 1)] #{1})
+                        (assoc-in [:grid (pt/->Point 2 1)] #{2})
+                        (assoc-in [:grid (pt/->Point 1 2)] #{3})
+                        (assoc-in [:grid (pt/->Point 2 2)] #{1}))]
+        (is (not (pu/is-open-puzzle? testpuz)))))
+    ))
 
+(deftest is-puzzle-valid?-test
+  (let [segs [(seg/create-row-segment 1 2 1 3 nil)
+              (seg/create-row-segment 1 2 2 4 nil)
+              (seg/create-column-segment 1 2 1 4 nil)
+              (seg/create-column-segment 1 2 2 3 nil)]
+        puzzle (cr/create-puzzle segs) ]
+    (testing "fully open / created puzzle is not valid"
+      (is (not (pu/is-puzzle-valid? puzzle))))
+    (testing "fully set puzzle with correct values"
+      (let [testpuz (-> puzzle
+                        (assoc-in [:grid (pt/->Point 1 1)] #{1})
+                        (assoc-in [:grid (pt/->Point 2 1)] #{2})
+                        (assoc-in [:grid (pt/->Point 1 2)] #{3})
+                        (assoc-in [:grid (pt/->Point 2 2)] #{1}))]
+        (is (pu/is-puzzle-valid? testpuz))))
+    ))

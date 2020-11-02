@@ -11,56 +11,29 @@
    [clojure.test :refer :all]
    ))
 
-(deftest restrict-segment-test
-  (let [rs (seg/create-row-segment 1 2 1 3 nil)
-        puzzle (cr/create-puzzle [rs])
-        new-rs (first (:segments puzzle))
-        new-grid (sol/restrict-segment puzzle new-rs)
-        point-values (vals new-grid)
-        res-values #{1 2}] ;;
-  (testing "both points should have values 1 and 2 only"
-    (is (every? #(= 2 (count %1)) point-values))
-    (is (every? #(empty? (cs/difference res-values %1)) point-values)))))
-
-(deftest reduce-grid-point-test
-  (testing "reducing to a new value list from point"
-    (let [pt (pt/->Point 2 1)
-          pt-vals #{1 2}
-          grid {pt #{1 2 3}} ]
-      (is (= {pt pt-vals} (sol/reduce-grid-point grid [pt pt-vals]))))))
-
-(deftest reduce-grid-part-test
-  (testing "reducing to a new value list from point"
-    (let [pt1 (pt/->Point 1 1), pt2 (pt/->Point 2 1)
-          pt-vals1 #{1 2 3 4}, pt-vals2 #{1 2}
-          grid {pt1 #{1 2}, pt2 #{1 2 3}}
-          grid-part {pt1 pt-vals1, pt2 pt-vals2}]
-      (is (= {pt1 #{1 2}, pt2 #{1 2}} (sol/reduce-grid-part grid grid-part))))))
-
-(deftest restrict-values-test
-  (testing "puzzle grid points will all have the res-values set"
-    (let [rs (seg/create-row-segment 1 2 1 3 nil)
-          puzzle (cr/create-puzzle [rs])
-          res-values #{1 2}] ;;
-      (is (every?
-           #(empty? (cs/difference res-values %1))
-           (vals (:grid puzzle))))))
-  (testing "2x2 Puzzle grid points" 
-    (let [segs [(seg/create-row-segment 1 2 1 3 nil)
-                (seg/create-row-segment 1 2 2 4 nil)
-                (seg/create-column-segment 1 2 1 4 nil)
-                (seg/create-column-segment 1 2 2 3 nil)]
-          puzzle (cr/create-puzzle segs)
-          values1 {(pt/->Point 1 1) #{1 2}
-                   (pt/->Point 2 1) #{1 2}
-                   (pt/->Point 1 2) #{1 2 3}
-                   (pt/->Point 2 2) #{1 2}}
-          res-puzzle (sol/restrict-values puzzle)
-          ] ;;
-      (is (= (:grid res-puzzle) values1)))))
-
 
 (deftest solve-test
+  (testing "1x1 puzzle with max value 1"
+    (let[puzzle (cr/create-puzzle [(seg/create-row-segment 1 1 1 1 nil)
+                                      (seg/create-column-segment 1 1 1 1 nil)])
+         des-result [{(pt/->Point 1 1) #{1}}]]
+         (is (= (sol/start-solve puzzle) des-result))))
+  (testing "1x1 puzzle with max value 2"
+    (let[puzzle (cr/create-puzzle [(seg/create-row-segment 1 1 1 2 nil)
+                                   (seg/create-column-segment 1 1 1 2 nil)])
+         des-result [{(pt/->Point 1 1) #{2}}]]
+      (is (= (sol/start-solve puzzle) des-result))))
+  (testing "2x1 puzzle with max value 3 in row, 3 segments"
+    (let[puzzle (cr/create-puzzle [(seg/create-row-segment    1 2 1 3 nil)
+                                   (seg/create-column-segment 1 1 1 1 nil)
+                                   (seg/create-column-segment 1 1 2 2 nil)
+                                   ])
+         des-result [{(pt/->Point 1 1) #{1}
+                      (pt/->Point 2 1) #{2}}]
+         ]
+      (is (= (sol/start-solve puzzle) des-result)))))
+
+(comment   
   (testing "solving a 2x2 puzzle"
     (let [segs [(seg/create-row-segment 1 2 1 3 nil)
                 (seg/create-row-segment 1 2 2 4 nil)
@@ -71,8 +44,8 @@
                     (pt/->Point 2 1) #{2}
                     (pt/->Point 1 2) #{3}
                     (pt/->Point 2 2) #{1}}
-          solutions (sol/solve puzzle)
+          solutions '() ; (sol/solve puzzle)
           ]
-      (is (= (first solutions) res-grid)))))
-
+      (is (= (first solutions) res-grid))))
+)
 

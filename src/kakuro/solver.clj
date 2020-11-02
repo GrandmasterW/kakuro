@@ -3,91 +3,86 @@
    [kakuro.puzzle :as pu]
    [kakuro.util :as util]
    [kakuro.point :as pt]
-   [kakuro.grid :as grid]
+   [kakuro.grid :as gr]
    [kakuro.creation :as cr]
    [kakuro.segment :as seg]
+   [kakuro.restrict :as rst]
+   [clojure.set :as cs]
    )
   )
 
-(defn restrict-segment [puzzle segment]
-  "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
-  ;; find open points, i.e. having more than one value
-  (let [grid (:grid puzzle)
-        segpoints (:points segment)
-        open-points (grid/open-grid-points grid segpoints)
-        deductible (if (= open-points segpoints) ; to need to compute
-                     0
-                     (grid/segment-value-sum grid segment))
-        restsum (- (:sum segment) deductible)
-        vmin (:min puzzle)
-        vmax (:max puzzle)
-        amax (max (dec (min vmax restsum)) 1) ; ensure minimum maximum... 
-        vrange (cr/create-initial-value-set vmin amax)
-        ]
-    (into {} (map #(hash-map %1 vrange) segpoints))))
 
+(defn collect-solution [solutions solution-grid]
+  "if the grid is not empty, add it to the solutions"
+    (if solution-grid
+      (conj solutions solution-grid)
+      solutions))
 
-(defn reduce-grid-point [grid [point pt-values]]
-  "If point is in grid, check if pt-values are less than existing values and use them if so."
-  (if-let [grid-vals (get grid point)]
-    (if (< (count pt-values) (count grid-vals))
-      (assoc grid point pt-values) ; new values have fewer elements, use them
-      grid) ; no need to change
-    (assoc grid point pt-values))) ; old values do not exist, use new
-
-
-(defn reduce-grid-part [grid grid-part]
-  "To be used with reduce on the grid-parts: returns the extended new-grid by checking for each point in grid-part, if it is already in res-grid and updating res-grid only, if values of new point are less then the one in new-grid. So 1/1 #{1 2 3} will be updated by 1/1 #{1 2}. In fact, it is a encapsulated reduce again."
-  (reduce reduce-grid-point grid grid-part))
-
-(defn restrict-values [puzzle]
-  "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle"
-  (let [grid (:grid puzzle)
-        segments (:segments puzzle)
-        grid-parts (map (partial restrict-segment puzzle) segments)
-        new-grid (reduce reduce-grid-part {} grid-parts)]
-    (assoc puzzle :grid new-grid)))
-
-(declare solve)
-
-(defn collect-solutions [solutions new-solutions]
-  "Returns a cleaned vector of solutions, enriched by new-solutions"
-  (if (and new-solutions (not (empty? new-solutions)))
-    (concat solutions new-solutions)
+(defn save-puzzle-if [solutions puzzle]
+  "Returns collection containing the grid of puzzle, if it is a valid puzzle, solutions otherwise"
+  (if (pu/is-puzzle-valid? puzzle) 
+    (collect-solution solutions (:grid puzzle)) ;; save it 
     solutions))
-  
-(defn iterate-values-at [puzzle solutions first-open-point]
+
+(defn puzzle-variations [puzzle point trail]
+  "Returns a vector of puzzles, each containing a different value at point as single value"
+  (let [values (get (:grid puzzle) point)]
+;;    (util/log "puzzle-variations" (pt/str-point point) values)
+    (mapv #(assoc-in puzzle [:grid point] #{%1}) values)))
+
+(declare solve-puzzle)
+
+(comment
+(defn iterate-values [puzzle solutions first-open-point]
   "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
-  (let [values (get (:grid puzzle) first-open-point)
-        v-puzzles (map #(assoc-in puzzle [:grid first-open-point] #{%1}) values)
-        v-solutions (map #(solve %1 solutions) v-puzzles)]
-    (collect-solutions solutions v-solutions)))
+  ;;
+  (util/log "iterate-values:1" (pt/str-point first-open-point) (pu/puzzle-to-str puzzle))
+  ;;
+  (if-let [c-puzzles
+           (filter (comp gr/is-correct-grid? :grid)
+                   (puzzle-variations puzzle first-open-point))]
+    (do
+      ;;
+      (util/log "iterate-values:2" (str "\n\t" (clojure.string/join "### \n\t" (pu/puzzle-to-str c-puzzles))))
+      (let [v-solutions (remove empty? (mapcat #(solve-puzzle %1 []) c-puzzles))]
+        (reduce conj solutions v-solutions)))))
+)
 
-(defn iterate-open-points [puzzle solutions open-points]
-  "Walks through the open points and computes them at each step"
-  (if (or (nil? open-points)(empty? open-points))
+(defn iterate-values [puzzle solutions first-open-point trail]
+  "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
+  (if-let [c-puzzles (filter (comp gr/is-correct-grid? :grid)
+                             (puzzle-variations puzzle first-open-point trail))]
+
+    (let [v-solutions (remove
+                       empty?
+                       (for [p c-puzzles]
+                         (solve-puzzle p [] (str trail "->" (pt/str-point p)))))]
+      (reduce concat solutions v-solutions))
+    solutions))
+
+(defn solve-puzzle [puzzle solutions trail]
+  {:pre [(not (util/count-steps!?))]}
+  "Returns solutions, expanded with current, restricted puzzle, if it is a solution. Otherwise we go down to iterating the values at the first open point."
+  (if (not (gr/is-correct-grid? (:grid puzzle)))
     solutions
-    (recur
-     puzzle
-     (collect-solutions solutions (iterate-values-at puzzle solutions (first open-points)))
-     (grid/open-grid-points (:grid puzzle)))))
+    (let [r-puzzle (rst/restrict-values puzzle)]
+      (if (not (gr/is-correct-grid? (:grid r-puzzle)))
+        solutions
+        (if-let [fop (pu/first-open-point r-puzzle)] ;; at least one open point?
+          (iterate-values r-puzzle solutions fop (str trail "->" fop))
+          (save-puzzle-if solutions r-puzzle)))))) ;; nothing open? Done!
 
-(defn solve
-  ([puzzle]
+
+(defn start-solve [puzzle]
    "returns a collection of grids that are solutions for the puzzle, each having only one value for each grid cell, matching all criteria"
-   (let [start-puzzle (restrict-values puzzle)]
-     ;; while there are points with more than one value: 
-     ;; consider the first point of those, use it's first value to proceed: 
-     ;; in each run: restrict the values in the new grid.
-     ;;
-     (trampoline solve start-puzzle [])))
-  ([puzzle solutions]
-   "worker"
-   (if (pu/is-open-puzzle? puzzle) ;; shall we continue?
-     (iterate-open-points puzzle solutions (grid/open-grid-points (:grid puzzle)))
-     (if (pu/is-final-valid? puzzle) ;; abort the puzzle, as it is no longer open. 
-       (collect-solutions solutions [(:grid puzzle)]) ;; save it 
-       solutions))) ;; else just stop and return
-  ) ; the end. 
-     
+   ;; while there are points with more than one value: 
+   ;; consider the first point of those, use it's first value to proceed: 
+   ;; in each run: restrict the values in the new grid.
+   ;;
+  (util/reset-steps!)
+  (println "Potential solutions: " (pu/count-potential-solutions puzzle))
+  (let [solutions (trampoline solve-puzzle puzzle [] "")]
+    (println "Steps" (util/get-steps) "\tnumber of solutions:" (count solutions))
+    solutions))
+
 
