@@ -41,7 +41,7 @@
         x-max (first dimensions)
         y-max (second dimensions)]
     (clojure.string/join
-     "\n"
+     "\t"
      (mapv
       (partial puzzle-row-to-str puzzle x-max)
       (util/fullrange 1 y-max)))))

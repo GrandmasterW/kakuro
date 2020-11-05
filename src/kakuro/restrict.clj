@@ -11,16 +11,18 @@
    )
   )
 
-(defn comp-vmax [vmax restsum number-open]
+(defn comp-vmax
   "Returns the value for maximum value range, based on vmax as defined value maximum in puzzle, restsum of segment and number-open open-points"
+  [vmax restsum number-open]
   (let [
         red (max (dec number-open) 0) ;; to reduce for open cells, but min 0 
         cand-vmax (min vmax restsum) ;; works for one cell 
         cand-vmax2 (- cand-vmax red)]
   (max cand-vmax2 1)))
 
-(defn comp-vrange [puzzle segment open-points]
+(defn comp-vrange
   "compute the value range for the open points of a segment in puzzle"
+  [puzzle segment open-points]
   (let [grid (:grid puzzle)
         cnt-open (count open-points)
         cnt-segpts (count (:points segment))
@@ -37,8 +39,9 @@
       prange
       vrange)))
 
-(defn restrict-segment [puzzle segment]
+(defn restrict-segment
   "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
+  [puzzle segment]
   (let [grid (:grid puzzle)
         segpoints (:points segment)
         open-points (gr/open-grid-points grid segpoints)
@@ -47,8 +50,9 @@
               #(hash-map %1 (cs/intersection vrange (get grid %1)))
               open-points)))) ;; TO DO make it better somehow. 
 
-(defn restrict-values [puzzle]
+(defn restrict-values
   "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle"
+  [puzzle]
   {:pre [(gr/is-correct-grid? (:grid puzzle))]}
   (if (not (pu/is-open-puzzle? puzzle))
     puzzle

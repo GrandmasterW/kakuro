@@ -1,6 +1,7 @@
 (ns kakuro.solver
   (:require
    [kakuro.puzzle :as pu]
+   [kakuro.strpuzzle :as spz]
    [kakuro.util :as util]
    [kakuro.point :as pt]
    [kakuro.grid :as gr]
@@ -36,14 +37,14 @@
 (defn iterate-values [puzzle solutions first-open-point]
   "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
   ;;
-  (util/log "iterate-values:1" (pt/str-point first-open-point) (pu/puzzle-to-str puzzle))
+  (util/log "iterate-values:1" (pt/str-point first-open-point) (spz/puzzle-to-str puzzle))
   ;;
   (if-let [c-puzzles
            (filter (comp gr/is-correct-grid? :grid)
                    (puzzle-variations puzzle first-open-point))]
     (do
       ;;
-      (util/log "iterate-values:2" (str "\n\t" (clojure.string/join "### \n\t" (pu/puzzle-to-str c-puzzles))))
+      (util/log "iterate-values:2" (str "\n\t" (clojure.string/join "### \n\t" (spz/puzzle-to-str c-puzzles))))
       (let [v-solutions (remove empty? (mapcat #(solve-puzzle %1 []) c-puzzles))]
         (reduce conj solutions v-solutions)))))
 )
@@ -63,11 +64,10 @@
 (defn solve-puzzle [puzzle solutions trail]
   {:pre [(not (util/count-steps!?))]}
   "Returns solutions, expanded with current, restricted puzzle, if it is a solution. Otherwise we go down to iterating the values at the first open point."
-  (if (not (gr/is-correct-grid? (:grid puzzle)))
-    solutions
+  ;;  (util/log "solve-puzzle" (spz/puzzle-to-str puzzle))
+  (if (not (gr/is-correct-grid? (:grid puzzle))) solutions
     (let [r-puzzle (rst/restrict-values puzzle)]
-      (if (not (gr/is-correct-grid? (:grid r-puzzle)))
-        solutions
+      (if (not (gr/is-correct-grid? (:grid r-puzzle))) solutions
         (if-let [fop (pu/first-open-point r-puzzle)] ;; at least one open point?
           (iterate-values r-puzzle solutions fop (str trail "->" fop))
           (save-puzzle-if solutions r-puzzle)))))) ;; nothing open? Done!
