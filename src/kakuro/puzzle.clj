@@ -32,7 +32,7 @@
 
 (defn count-potential-solutions [puzzle]
   "count the number of potential solutions by multipling the number of values of each cell"
-  (reduce * 1 (map count (vals (:grid puzzle)))))
+  (reduce * 1N (map count (vals (:grid puzzle)))))
 
 
 (defn is-open-puzzle? [puzzle]

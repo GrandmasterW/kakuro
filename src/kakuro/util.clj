@@ -26,7 +26,7 @@
 
 
 ;; debug helper
-(def MAXSTEPS 1000000N)
+(def MAXSTEPS 10000000N)
 
 (def steps (atom 0))
 
