@@ -20,7 +20,7 @@
           (= (empty?
               (cs/difference
                (into #{} points)
-               (into #{} (map #(pt/->Point %1 y) (util/fullrange fx tx))))))))))
+               (into #{} (map #(pt/Point %1 y) (util/fullrange fx tx))))))))))
 
 
 (deftest value-string-test
@@ -29,8 +29,8 @@
     (is (= "?" (grid/value-string #{1 2 3 4 5 6 7 8 9})))))
 
 (deftest is-open-point?-test
-  (let [p1 (pt/->Point 1 1)
-        p2 (pt/->Point 2 1)
+  (let [p1 (pt/Point 1 1)
+        p2 (pt/Point 2 1)
         pts #{p1 p2}
         rs (seg/create-row-segment 1 2 1 3 pts)
         gr {p1 #{2} p2 (into #{} (range 1 10))}
@@ -44,8 +44,8 @@
     (is (not (grid/is-open-point? gr2 p2))))))
 
 (deftest open-grid-points-test
-  (let [p1 (pt/->Point 1 1)
-        p2 (pt/->Point 2 1)
+  (let [p1 (pt/Point 1 1)
+        p2 (pt/Point 2 1)
         pts #{p1 p2}
         rs (seg/create-row-segment 1 2 1 3 pts)
         gr {p1 #{2} p2 (into #{} (range 1 10))}
@@ -60,8 +60,8 @@
     (is (empty? result2)))))
 
 (deftest fixed-grid-points-test
-  (let [p1 (pt/->Point 1 1)
-        p2 (pt/->Point 2 1)
+  (let [p1 (pt/Point 1 1)
+        p2 (pt/Point 2 1)
         pts #{p1 p2}
         rs (seg/create-row-segment 1 2 1 3 pts)
         gr {p1 #{2} p2 (into #{} (range 1 10))}
@@ -77,8 +77,8 @@
     (is (every? (partial contains? result2) pts)))))
 
 (deftest segment-value-sum-test
-  (let [p1 (pt/->Point 1 1)
-        p2 (pt/->Point 2 1)
+  (let [p1 (pt/Point 1 1)
+        p2 (pt/Point 2 1)
         pts #{p1 p2}
         rs (seg/create-row-segment 1 2 1 3 pts)
         gr {p1 #{2} p2 (into #{} (range 1 10))}
@@ -95,17 +95,17 @@
     (let [rs (seg/create-row-segment 1 3 1 6 nil)
           puzzle (cr/create-puzzle [rs])
           finpuz (-> puzzle
-                     (assoc-in [:grid (pt/->Point 1 1)] #{1})
-                     (assoc-in [:grid (pt/->Point 2 1)] #{2})
-                     (assoc-in [:grid (pt/->Point 3 1)] #{3}))]
+                     (assoc-in [:grid (pt/Point 1 1)] #{1})
+                     (assoc-in [:grid (pt/Point 2 1)] #{2})
+                     (assoc-in [:grid (pt/Point 3 1)] #{3}))]
       (is (grid/segment-values-unique? (:grid finpuz) (first (:segments finpuz))))))
   (testing "not unique values"
     (let [rs (seg/create-row-segment 1 3 1 6 nil)
           puzzle (cr/create-puzzle [rs])
           finpuz (-> puzzle
-                     (assoc-in [:grid (pt/->Point 1 1)] #{1})
-                     (assoc-in [:grid (pt/->Point 2 1)] #{1}) ; the glitch
-                     (assoc-in [:grid (pt/->Point 3 1)] #{3}))]
+                     (assoc-in [:grid (pt/Point 1 1)] #{1})
+                     (assoc-in [:grid (pt/Point 2 1)] #{1}) ; the glitch
+                     (assoc-in [:grid (pt/Point 3 1)] #{3}))]
       (is (not (grid/segment-values-unique?
                 (:grid finpuz)
                 (first (:segments finpuz)))))))

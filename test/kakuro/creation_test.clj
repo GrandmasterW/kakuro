@@ -9,7 +9,7 @@
 (deftest create-points-for-segment-test
   (testing "simple: two points on segment :h, 3-4, 2"
     (let [fx 3, tx 4, y 2
-          p1 (pt/->Point fx y), p2 (pt/->Point tx y),
+          p1 (pt/Point fx y), p2 (pt/Point tx y),
           pts #{p1 p2}
           rs (seg/create-row-segment fx tx y 11 nil)
           rpts (cr/create-points-for-segment rs) ]
