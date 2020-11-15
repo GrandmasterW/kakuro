@@ -26,15 +26,29 @@
    })
 
 
-(defn- create-segment [orientation from-a to-a b sum points]
-  "helper to create empty set for points"
-  (->Segment orientation from-a to-a b sum (if points points #{})))
+(defn- create-segment "helper to create empty set for points"
+  ([orientation from-a to-a b sum]
+   (create-segment orientation from-a to-a b sum nil))
+  ([orientation from-a to-a b sum points]
+   (->Segment orientation from-a to-a b sum (if points points #{}))))
 
-(defn create-column-segment [from-y to-y x sum points]
+(defn new-segment
+  [orientation from-a to-a b sum]
+  (create-segment orientation from-a to-a b sum))
+
+(defn create-column-segment
+  [from-y to-y x sum points]
   (create-segment :v from-y to-y x sum points))
+
+(defn new-column
+  [from-y to-y x sum]
+  (create-column-segment from-y to-y x sum nil))
 
 (defn create-row-segment [from-x to-x y sum points]
   (create-segment :h from-x to-x y sum points))
+
+(defn new-row [from-x to-x y sum]
+  (create-row-segment from-x to-x y sum nil))
 ;;
 ;; predicates
 ;;

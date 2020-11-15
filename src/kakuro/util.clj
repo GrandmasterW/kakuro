@@ -24,11 +24,25 @@
     nilval
     (first coll)))
 
+;; ----------------------------------------------------------------------
+;; parallel execution helpers
+;;
+(def par-switch (atom 0))
+(def max-par 0)
+
+(defn get-mapper []
+  (if (< @par-switch max-par)
+    (do
+      (swap! par-switch inc)
+      pmap)
+    map))
+
 
 ;; debug helper
-(def MAXSTEPS 10000000N)
+;;            ...,,,...  
+(def MAXSTEPS 900000000N)
 
-(def steps (atom 0))
+(def steps (atom 0N))
 
 (defn reset-steps! []
   (reset! steps 0))
