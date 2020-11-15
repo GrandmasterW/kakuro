@@ -7,6 +7,7 @@
                  [org.clojure/math.combinatorics "0.1.6"]]
   
   :main ^:skip-aot kakuro.core
+  :jvm-opts ["-Xmx6g" "-XX:TieredStopAtLevel=1"]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
