@@ -1,9 +1,9 @@
 (ns kakuro.puzzle
   (:require
-   [kakuro.util :as util]
+   ;;[kakuro.util :as util]
    [kakuro.grid :as gr]
-   [kakuro.point :as pt]
-   [clojure.pprint :as cpp]
+   ;;[kakuro.point :as pt]
+   ;;[clojure.pprint :as cpp]
    ))
 
 ;; ----------------------------------------------------------------------
@@ -24,29 +24,35 @@
    :max max})
 
 
-(defn puzzle-dimensions [puzzle]
+(defn puzzle-dimensions
   "returns a vector of x and y maximum dimensions, i.e. the max x and max y value of contained points"
+   [puzzle]
   (let [points (keys (:grid puzzle))]
     [(reduce max 0 (map :x points))
      (reduce max 0 (map :y points))]))
 
-(defn count-potential-solutions [puzzle]
+(defn count-potential-solutions
   "count the number of potential solutions by multipling the number of values of each cell"
+   [puzzle]
   (reduce * 1N (map count (vals (:grid puzzle)))))
 
 
-(defn is-open-puzzle? [puzzle]
+(defn is-open-puzzle?
   "True, if at least one open point on the grid"
-  (not (empty? (gr/open-grid-points (:grid puzzle)))))
+   [puzzle]
+  (seq (gr/open-grid-points (:grid puzzle))))
 
-(defn first-open-point [puzzle]
+(defn first-open-point
   "Find the first open point on the puzzle, if any. Order them by x asc"
+   [puzzle]
   (let [ops (gr/open-grid-points (:grid puzzle))]
-    (if (and ops (not (empty? ops)))
-      (first (sort-by first ops)))))
+    (if (and ops (seq ops))
+      (first (sort-by first ops))
+      nil)))
 
-(defn is-puzzle-valid? [puzzle]
+(defn is-puzzle-valid?
   "True, if all constraints are met: segment sums equal value sums, digits in a segment are unique"
+   [puzzle]
   (let [pgrid (:grid puzzle)
         segments (:segments puzzle)]
     (and

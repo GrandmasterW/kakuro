@@ -22,7 +22,7 @@
   "Returns a string for the values: if only one digit is left, use that, preceeded by a point. If more than one, return # plus digit of number of values. Empty list: !!"
   (cond
       (empty? values) "!!"
-      (= (count values) 1) (first values)
+      (= (count values) 1) (str (first values))
       :else (str "#" (count values))))
 
 (defn is-open-point? [grid point]

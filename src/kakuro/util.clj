@@ -1,5 +1,11 @@
 (ns kakuro.util)
+
+
+
 ;; math helpers
+(defn transpose [m]
+  (apply mapv vector m))
+
 
 (defn betweenl [x from to]
   "true, if from <= x <= to for integers"

@@ -26,7 +26,8 @@
 (deftest value-string-test
   (testing "return meaningful value"
     (is (= "1" (grid/value-string #{1})))
-    (is (= "?" (grid/value-string #{1 2 3 4 5 6 7 8 9})))))
+    (is (= "!!" (grid/value-string #{})))
+    (is (= "#9" (grid/value-string #{1 2 3 4 5 6 7 8 9})))))
 
 (deftest is-open-point?-test
   (let [p1 (pt/Point 1 1)

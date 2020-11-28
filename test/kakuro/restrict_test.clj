@@ -37,9 +37,9 @@
                 (seg/new-column 1 2 1 4)
                 (seg/new-column 1 2 2 3)]
           puzzle (cr/create-puzzle segs)
-          values1 {(pt/Point 1 1) #{1 2}
+          values1 {(pt/Point 1 1) #{1 3}
                    (pt/Point 2 1) #{1 2}
-                   (pt/Point 1 2) #{1 2 3}
+                   (pt/Point 1 2) #{1 3}
                    (pt/Point 2 2) #{1 2}}
           res-puzzle (rst/restrict-values puzzle)
           ] ;;

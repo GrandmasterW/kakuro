@@ -170,10 +170,12 @@
    })
 
 
+
 (defn get-pattern
   "returns a unique pattern for sum value in places from the internal map"
   [value places]
   (get all-patterns [value places]))
+
 
 (defn comp-patterns
   [value places digits]

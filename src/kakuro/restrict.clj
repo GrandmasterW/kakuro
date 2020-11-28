@@ -1,13 +1,14 @@
 (ns kakuro.restrict
   (:require
    [kakuro.puzzle :as pu]
-   [kakuro.util :as util]
+   ;;   [kakuro.util :as util]
    [kakuro.patterns :as pat]
-   [kakuro.point :as pt]
+   ;; [kakuro.point :as pt]
    [kakuro.grid :as gr]
    [kakuro.creation :as cr]
-   [kakuro.segment :as seg]
+   ;;[kakuro.segment :as seg]
    [clojure.set :as cs]
+   [clojure.math.combinatorics :as combo]
    )
   )
 
@@ -33,10 +34,13 @@
     (= cnt-open 1)                   #{(min vmax restsum)}
     :else (cr/create-initial-value-set vmin (comp-vmax vmax restsum cnt-open))))
 
+
 (defn comp-vrange
   "compute the value range for the open points of a segment in puzzle"
   [puzzle segment open-points]
+
   {:pre [(seq open-points)]}
+
   (let [grid (:grid puzzle)
         cnt-open (count open-points)
         cnt-segpts (count (:points segment))
@@ -47,10 +51,7 @@
         vmax (:max puzzle)
         prange (pat/get-pattern restsum cnt-open)
         vrange (make-vrange vmin vmax restsum cnt-open)]
-    (comment
-      (util/log grid)      (util/log cnt-open)      (util/log cnt-segpts)      (util/log deductible)      (util/log restsum)
-      (util/log vmin)      (util/log vmax)      (util/log amax)      (util/log prange)      (util/log vrange))
-    
+
     (if (and (< (count prange)(count vrange))(seq prange))
       prange
       vrange)))
@@ -62,18 +63,36 @@
         segpoints (:points segment)
         open-points (gr/open-grid-points grid segpoints)
         vrange (if (seq open-points)
-                 (comp-vrange puzzle segment open-points)
+                 (comp-vrange puzzle segment open-points) ;; this is too broad - should be limited to a point? 
                  #{})]
-    (comment      (util/log grid)      (util/log open-points)      (util/log vrange))
     (into {} (mapv
               #(hash-map %1 (cs/intersection vrange (get grid %1)))
               open-points)))) ;; TO DO make it better somehow. 
+
+(defn restrict-segment-combis
+  "restrict the combinations of values in a segment by using the cartesian product of the values"
+  [puzzle segment]
+  (let [grid (:grid puzzle)
+        segpoints (:points segment)
+        open-points (gr/open-grid-points grid segpoints)
+        opvs (mapv #(get grid %1) open-points)
+        cp (apply combo/cartesian-product opvs)]
+    ;; filter sum of each element equal segment sum
+    ;; transpose back to values
+    ;; assign to open-points
+    ;; avoid 1 place treatment
+    ;; TODO
+    cp
+  ))
+
+
+
 
 (defn restrict-values
   "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle"
   [puzzle]
 ;;  {:pre [(gr/is-correct-grid? (:grid puzzle))]}
-;;  (util/log (:grid puzzle))
+
   (if (not (pu/is-open-puzzle? puzzle))
     puzzle
     (let [res-grid (into {}
@@ -82,4 +101,18 @@
                           (:segments puzzle)))
           new-grid (merge (:grid puzzle) res-grid)]
       (assoc puzzle :grid new-grid))))
+
+
+
+  
+(defn restrict-puzzle
+  "loop over restrictions until nothing changes. Returns maximum restricted puzzle"
+  [puzzle]
+  (let [old-grid (:grid puzzle)
+        new-puzzle (restrict-values puzzle)]
+    (if (= old-grid (:grid new-puzzle))
+      ;; no changes any more?
+      new-puzzle ;; done!
+      ;; else: try one more restriction
+      (recur new-puzzle))))
 
