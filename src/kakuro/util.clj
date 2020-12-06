@@ -1,31 +1,37 @@
-(ns kakuro.util)
+(ns kakuro.util
+  (:require [clojure.string :as s]))
 
 
 
 ;; math helpers
 (defn transpose [m]
+  {:pre [(seq m)]}
   (apply mapv vector m))
 
 
-(defn betweenl [x from to]
+(defn betweenl 
   "true, if from <= x <= to for integers"
+  [x from to]
   (and (>= x from) (<= x to)))
 
-(defn betweenr [from to x]
+(defn betweenr
   "changes order or parameters to allow comp, returns between x from to"
+   [from to x]
   (betweenl x from to))
 
 (defn fullrange
-  ([from to] "returns a range from from to to inclusive, i.e. (inc to), step 1"
+  "returns a range from from to to inclusive, i.e. (inc to), step 1"
+  ([from to] 
    (fullrange from to 1))
-  ([from to step] "returns a range from from to to inclusive, but with stepwidth step. If step < 0, then to is decreased by 1"
+  ([from to step] 
    (if (> step 0)
      (range from (inc to) step)
      (range from (dec to) step))))
 
 
-(defn first-val [nilval coll]
+(defn first-val 
   "Returns the first value of the collection if available, otherwise nilval"
+  [nilval coll]
   (if (empty? coll)
     nilval
     (first coll)))
@@ -72,11 +78,12 @@
 (defn log
   ([message]
    (if D-PRINT
-     (println (get-steps) "\t" message)))
+     (println (get-steps) "\t" message)
+     nil))
   ([method & args]
    (log
     (str 
-     method "\t\t"
-     (clojure.string/join " | " args)))))
+     method "\n"
+     (s/join " | " args)))))
 
 ;; ----------------------------------------------------------------------

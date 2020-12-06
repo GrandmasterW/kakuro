@@ -1,5 +1,6 @@
 (ns kakuro.patterns
   (:require
+   [kakuro.util :as util]
    [clojure.math.combinatorics :as combo]
    [clojure.set :as cs]
 ))
@@ -169,12 +170,35 @@
 ;;   [45 9] #{7 1 4 6 3 2 9 5 8}
    })
 
+(defn comp-vmax
+  "Returns the value for maximum value range,
+  based on vmax as defined value maximum in puzzle,
+  restsum of segment and number-open open-points.
+  If number-open is 1: min vmax, restsum
+  If restsum < vmax: restsum -1 as you cannot use the digit for restsum itself
+  else vmax because we cannot judge which to spare (could be extended by combinatorics with vmax and number-open)"
+  [vmax value places]
+  {:pre [(> value 0)]}
+  (cond
+    (= places 1) (min vmax value)
+    (and (> value 0)(< value vmax)) (- value places)
+    :else vmax))
 
 
 (defn get-pattern
-  "returns a unique pattern for sum value in places from the internal map"
-  [value places]
-  (get all-patterns [value places]))
+  "returns a unique pattern for sum value in places from the internal map. Returns nil if not found or error, a set else."
+  [value places vmin vmax]
+  (cond
+    (or (<= value 0) (= places 0)) nil ;; error
+    (and (<= value vmax) (= places 1)) #{value} ;; only one value
+    (and (> value vmax)  (= places 1)) nil ;; error
+    :else 
+    (if-let [pattern (get all-patterns [value places])]
+      pattern
+      ;; make our own value-set till maximum usable value:
+      ;; subtract places from value
+      (into #{}
+            (util/fullrange vmin (comp-vmax vmax value places))))))
 
 
 (defn comp-patterns

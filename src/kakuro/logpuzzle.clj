@@ -6,10 +6,22 @@
    ))
 
 
-(defn log-puzzle [puzzle]
-  (println (h/puzzle-html puzzle))
-  (println (html [:br]))
-  )
+(defn log-puzzle
+  ([puzzle]
+   (println (html
+              (h/puzzle-html puzzle)
+              [:br])))
+  ([msg puzzle]
+   (println (html
+             [:p msg]
+              (h/puzzle-html puzzle)
+              [:br])))
+  ([msg trail puzzle]
+   (println (html
+             [:p msg " " trail]
+              (h/puzzle-html puzzle)
+              [:br]))))
+
 
 (defn log-step-trail
   [trail]

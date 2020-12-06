@@ -21,7 +21,7 @@
   (let [pgrid (:grid puzzle)]
     (str
      (cst/join
-      " "
+      "\t"
       (map
        #(point-to-str pgrid %1 row)
        (util/fullrange 1 x-max))))))

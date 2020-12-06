@@ -1,118 +1,195 @@
 (ns kakuro.restrict
   (:require
    [kakuro.puzzle :as pu]
-   ;;   [kakuro.util :as util]
+   [kakuro.util :as util]
    [kakuro.patterns :as pat]
-   ;; [kakuro.point :as pt]
+   [kakuro.logpuzzle :as lpu]
+   [kakuro.dbgpuzzle :as dbp]
    [kakuro.grid :as gr]
-   [kakuro.creation :as cr]
-   ;;[kakuro.segment :as seg]
-   [clojure.set :as cs]
    [clojure.math.combinatorics :as combo]
    )
   )
 
-(defn comp-vmax
-  "Returns the value for maximum value range,
-  based on vmax as defined value maximum in puzzle,
-  restsum of segment and number-open open-points.
-  If number-open is 1: min vmax, restsum
-  If restsum < vmax: restsum -1 as you cannot use the digit for restsum itself
-  else vmax because we cannot judge which to spare (could be extended by combinatorics with vmax and number-open)"
-  [vmax restsum number-open]
-  {:pre [(> restsum 0)]}
-  (cond
-    (= number-open 1) (min vmax restsum)
-    (< restsum vmax) (dec restsum)
-    :else vmax))
+;; ----------------------------------------------------------------------
+;; Constants
+;; ----------------------------------------------------------------------
+;;
+;; max number of places in range 0..8 for computing
+;; combinations without blowing up the machine
+;;
+(def MAX_OPEN_COMBI 10)
+;;
+;; ----------------------------------------------------------------------
+;;
 
+;;
+;; for both, patterns and combinations
+;;
+(defn restrict-seg-orientation
+  "Generic function, applied to a puzzle a given orientation and a restricter function.
+   Applies restricter to all segments with orientation, i.e. restricter must take puzzle and segment.
+   Returns a grid of point to value-sets of the restricter. "
+  [puzzle orientation restricter]
+  (let [
+        interim-grid (into {}
+                           (mapv (partial restricter puzzle)
+                                 (filter #(= (:orientation %1) orientation)
+                                         (:segments puzzle))))
 
-(defn make-vrange
-  [vmin vmax restsum cnt-open]
-  (cond
-    (or (= restsum 0)(= cnt-open 0)) #{} ;; TO DO: somehow better
-    (= cnt-open 1)                   #{(min vmax restsum)}
-    :else (cr/create-initial-value-set vmin (comp-vmax vmax restsum cnt-open))))
+        ;; _ (do (println "RSO" "\tinterim-grid\t" interim-grid) nil )
+        ]
+    interim-grid))
 
+(defn restrict-by
+  "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle.
+   Each segment is restricted by restricter function. Horizontal segments first, puzzle updated for vertical segments. 
+   Returns a puzzle."
+  [puzzle restricter]
+
+  (if (or (not (gr/is-correct-grid? (:grid puzzle)))
+          (not (pu/is-open-puzzle? puzzle)))
+    puzzle
+    (let [
+          ;; we have to consider one orientation first, update the puzzle and consider the other afterwards.
+          ;; This ensures to work on incremental restrictions!
+          ;; All segments of one orientation cannot influence each other - but h and v segments will do. 
+          h-grid (restrict-seg-orientation puzzle :h restricter)
+
+;;          _ (do (println "RBY" "\th-grid\t"  h-grid)            nil)
+
+          h-puzzle (pu/merge-puzzle-grid puzzle h-grid)
+
+          v-grid (restrict-seg-orientation h-puzzle :v restricter)
+
+          ;; _ (do     (println "\tv-grid\t" v-grid)          nil)
+
+          v-puzzle (pu/merge-puzzle-grid h-puzzle v-grid)
+
+          ]
+      v-puzzle)))
+
+;;
+;; pattern related functions
+;; 
+
+(defn get-deductible
+  [cnt-open cnt-segpts grid segment]
+  (if (= cnt-open cnt-segpts) 0 ; no need to compute
+      (gr/segment-value-sum grid segment)))
 
 (defn comp-vrange
-  "compute the value range for the open points of a segment in puzzle"
+  "compute the value range for the open points of a segment in puzzle by using the patterns. Returns a range set."
   [puzzle segment open-points]
-
-  {:pre [(seq open-points)]}
 
   (let [grid (:grid puzzle)
         cnt-open (count open-points)
         cnt-segpts (count (:points segment))
-        deductible (if (= cnt-open cnt-segpts) 0 ; no need to compute
-                       (gr/segment-value-sum grid segment))
+        deductible (get-deductible cnt-open cnt-segpts grid segment)
         restsum (- (:sum segment) deductible)
         vmin (:min puzzle)
         vmax (:max puzzle)
-        prange (pat/get-pattern restsum cnt-open)
-        vrange (make-vrange vmin vmax restsum cnt-open)]
+        prange (pat/get-pattern restsum cnt-open vmin vmax)
+        ]
+    prange))
 
-    (if (and (< (count prange)(count vrange))(seq prange))
-      prange
-      vrange)))
-
-(defn restrict-segment
+(defn restrict-segment-patterns
   "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
   [puzzle segment]
+
+  ;;(println "RSP" "\t" (:grid puzzle) "\n\tseg\t"(:points segment))
   (let [grid (:grid puzzle)
-        segpoints (:points segment)
-        open-points (gr/open-grid-points grid segpoints)
-        vrange (if (seq open-points)
-                 (comp-vrange puzzle segment open-points) ;; this is too broad - should be limited to a point? 
-                 #{})]
-    (into {} (mapv
-              #(hash-map %1 (cs/intersection vrange (get grid %1)))
-              open-points)))) ;; TO DO make it better somehow. 
+        open-points (gr/open-grid-points grid (:points segment))]
+
+    (if (seq open-points)
+      (let [vrange (comp-vrange puzzle segment open-points)
+
+;;            _ (do (println  "\tvrange\t" vrange)                nil
+            
+            ;; assign to open points locally
+            v-grid (into {} (mapv hash-map open-points (repeat vrange)))
+
+;;            _ (do                (println  "\tv-grid\t" v-grid) nil)
+            ]
+        v-grid)
+      {})))
+
+;;
+;; combinations
+;;
+
+(defn find-combi-fits
+  "Retrieves the potential candidates the open-points value-sets
+   which build the sum of the segment.
+   Returns a list of tupels, in which first place belongs to first open-point and so on." 
+  [grid segment open-points]
+  (let [;; get open points value sets
+        opvs (mapv #(get grid %1) open-points)
+        
+        ;; create cartesian product, one value of each set in a list element
+        cp (apply combo/cartesian-product opvs)
+            
+        ;; keep lists with sum matching the segment sum
+        fits (filter #(= (:sum segment) (apply + %1)) cp)           ]
+    fits))
+
+
+(defn find-transpose-remake
+  "Returns a grid of the open points assigned to potential value sets from the combination. Nil if no combinations valid"
+  [grid segment open-points]
+  (let [fits (find-combi-fits grid segment open-points) ]
+    
+    (if (not (seq fits)) nil
+        ;; else
+        (into {}
+              (map hash-map open-points 
+                   (map #(into #{} %1) (util/transpose fits)))))))
 
 (defn restrict-segment-combis
-  "restrict the combinations of values in a segment by using the cartesian product of the values"
+  "Restrict the combinations of values in a segment by using
+  the cartesian product of the values.
+  Achieved by transposing the results back into value-sets.
+  Returns the open points with new value sets as a hash-map."
   [puzzle segment]
-  (let [grid (:grid puzzle)
-        segpoints (:points segment)
-        open-points (gr/open-grid-points grid segpoints)
-        opvs (mapv #(get grid %1) open-points)
-        cp (apply combo/cartesian-product opvs)]
-    ;; filter sum of each element equal segment sum
-    ;; transpose back to values
-    ;; assign to open-points
-    ;; avoid 1 place treatment
-    ;; TODO
-    cp
-  ))
-
-
-
-
-(defn restrict-values
-  "Restricts the grid cells values by considering each segment and packing the updated values back into a the puzzle"
-  [puzzle]
-;;  {:pre [(gr/is-correct-grid? (:grid puzzle))]}
-
-  (if (not (pu/is-open-puzzle? puzzle))
-    puzzle
-    (let [res-grid (into {}
-                         (mapv
-                          (partial restrict-segment puzzle)
-                          (:segments puzzle)))
-          new-grid (merge (:grid puzzle) res-grid)]
-      (assoc puzzle :grid new-grid))))
-
-
-
   
+;;  (dbp/dbg-puzzle (str "RSC: " (:points segment)) puzzle)
+  (let [grid (:grid puzzle)
+        seg-points (:points segment)
+        open-points (gr/open-grid-points grid seg-points)
+        cnt-open (count open-points)]
+    
+    (if (or 
+         (not (seq open-points))         
+         (< cnt-open 2)                     ; do not waste time for one place only
+         (> cnt-open MAX_OPEN_COMBI)) grid  ; do not compute for 9 places with 9 values...
+        ;; else
+        (if-let [change-grid (find-transpose-remake grid segment open-points)]
+         ;; (do
+;;            (dbp/dbg-puzzle (str "RSC:change-grid" (assoc puzzle :grid change-grid)))
+;; to do: restrict not valid combinations, i.e. 6 and 6
+          change-grid
+         ;; )
+          {}))))
+
+;;
+;; putting it all together
+;; 
 (defn restrict-puzzle
   "loop over restrictions until nothing changes. Returns maximum restricted puzzle"
   [puzzle]
+  (dbp/dbg-puzzle "restrict-puzzle#1" puzzle)
+
   (let [old-grid (:grid puzzle)
-        new-puzzle (restrict-values puzzle)]
-    (if (= old-grid (:grid new-puzzle))
-      ;; no changes any more?
-      new-puzzle ;; done!
-      ;; else: try one more restriction
-      (recur new-puzzle))))
+
+        ;; pr: pattern restricted
+        pr-puzzle (restrict-by puzzle restrict-segment-patterns)
+        _ (do (dbp/dbg-puzzle "restrict-puzzle#2" pr-puzzle) nil)
+
+        ;; improved by computing combinations
+        com-puzzle (restrict-by pr-puzzle restrict-segment-combis)
+        _ (do (dbp/dbg-puzzle "restrict-puzzle#3" com-puzzle) nil)
+        ]
+    
+    (if (= old-grid (:grid com-puzzle))
+      (if (gr/is-correct-grid? (:grid com-puzzle)) com-puzzle puzzle)
+      (recur com-puzzle))))
 

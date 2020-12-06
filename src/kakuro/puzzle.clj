@@ -2,6 +2,7 @@
   (:require
    ;;[kakuro.util :as util]
    [kakuro.grid :as gr]
+   [clojure.set :as cs]
    ;;[kakuro.point :as pt]
    ;;[clojure.pprint :as cpp]
    ))
@@ -61,4 +62,14 @@
      (every? (partial gr/segment-values-unique? pgrid) segments)) ; all digits unique?
     ))
 
+(defn merge-puzzle-grid
+  "If new-grid not nil, merges it by intersection
+   with the grid of puzzle and assocs it into puzzle.
+   Returns a puzzle"
+  [puzzle new-grid]
+  (if new-grid
+    (assoc puzzle
+           :grid
+           (merge-with cs/intersection (:grid puzzle) new-grid))
+    puzzle))
 

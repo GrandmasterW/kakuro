@@ -26,13 +26,7 @@
   [solutions puzzle]
 
   (if (pu/is-puzzle-valid? puzzle)
-    (do
-      (comment
-        (util/log "save-puzzle-if")
-        (spz/print-puzzle puzzle)
-        )
       (collect-solution solutions (:grid puzzle)) ;; save it
-      )
     solutions))
 
 (defn puzzle-variations 
@@ -47,8 +41,6 @@
 (defn iterate-values
   "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
    [puzzle solutions first-open-point trail]
-
-;;  (util/log "iterate-values" "trail:" trail first-open-point (get (:grid puzzle) first-open-point))
 
   (let [c-puzzles (puzzle-variations puzzle first-open-point)
         v-solutions (remove empty?
@@ -65,8 +57,8 @@
   "Returns solutions, expanded with current, restricted puzzle, if it is a solution. Otherwise we go down to iterating the values at the first open point."
   [puzzle solutions trail]
   {:pre [(not (util/count-steps!?))]}
-  (lpu/log-step-trail trail)
-  (lpu/log-puzzle puzzle)
+
+  (lpu/log-puzzle "solve-puzzle" trail puzzle)
   (if (not (gr/is-correct-grid? (:grid puzzle))) solutions
     (let [r-puzzle (rst/restrict-puzzle puzzle)]
       (if (not (gr/is-correct-grid? (:grid r-puzzle))) solutions
@@ -78,10 +70,6 @@
 (defn start-solve
   "returns a collection of grids that are solutions for the puzzle, each having only one value for each grid cell, matching all criteria"
    [puzzle]
-   ;; while there are points with more than one value: 
-   ;; consider the first point of those, use it's first value to proceed: 
-   ;; in each run: restrict the values in the new grid.
-   ;;
   (util/reset-steps!)
   (let [solutions (trampoline #(solve-puzzle puzzle [] ""))]
     (lpu/log-steps-solutions  (util/get-steps)

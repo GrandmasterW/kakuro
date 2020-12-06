@@ -1,14 +1,14 @@
 (ns kakuro.importer
   (:require
-   [kakuro.puzzle :as pu]
-   [kakuro.strpuzzle :as spz]
-   [kakuro.util :as util]
-   [kakuro.point :as pt]
-   [kakuro.grid :as gr]
+;;   [kakuro.puzzle :as pu]
+;;   [kakuro.strpuzzle :as spz]
+ ;;  [kakuro.util :as util]
+;;   [kakuro.point :as pt]
+;;   [kakuro.grid :as gr]
    [kakuro.creation :as cr]
    [kakuro.segment :as seg]
-   [kakuro.restrict :as rst]
-   [clojure.set :as cs]
+  ;; [kakuro.restrict :as rst]
+;;   [clojure.set :as cs]
    [clojure.edn :as edn]
    )
   )
@@ -37,5 +37,10 @@
         cols (mapv (partial create-seg :v) (:columns e-map)) ]
     (cr/create-puzzle (into [] (concat rows cols)))))
 
-
+(defn read-puzzle
+  "Reads the given file and returns a puzzle structure"
+  [filename]
+  (-> filename
+      read-puzzle-file
+      into-puzzle))
         
