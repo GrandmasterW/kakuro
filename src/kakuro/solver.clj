@@ -1,13 +1,13 @@
 (ns kakuro.solver
   (:require
    [kakuro.puzzle :as pu]
-   [kakuro.strpuzzle :as spz]
+;   [kakuro.strpuzzle :as spz]
    [kakuro.util :as util]
    [kakuro.point :as pt]
    [kakuro.grid :as gr]
    [kakuro.logpuzzle :as lpu]
    ;; [kakuro.segment :as seg]
-   [kakuro.restrict :as rst]
+   [kakuro.restrict.core :as rst]
    ;; [clojure.set :as cs]
    )
   )
