@@ -37,7 +37,6 @@
    [puzzle]
   (reduce * 1N (map count (vals (:grid puzzle)))))
 
-
 (defn is-open-puzzle?
   "True, if at least one open point on the grid"
    [puzzle]
@@ -47,8 +46,8 @@
   "Find the first open point on the puzzle, if any. Order them by x asc"
    [puzzle]
   (let [ops (gr/open-grid-points (:grid puzzle))]
-    (if (and ops (seq ops))
-      (first (sort-by first ops))
+    (if (seq ops)
+      (first (sort-by first (sort-by second ops)))
       nil)))
 
 (defn is-puzzle-valid?
@@ -62,14 +61,27 @@
      (every? (partial gr/segment-values-unique? pgrid) segments)) ; all digits unique?
     ))
 
+(defn is-correct-puzzle?
+  "true if grid is correct and at least one segment exists"
+  [puzzle]
+  (and (gr/is-correct-grid? (:grid puzzle))
+       (seq (:segments puzzle))))
+
+(defn correct-puzzle-only
+  [puzzle]
+  (if (is-correct-puzzle? puzzle) puzzle nil))
+
 (defn merge-puzzle-grid
   "If new-grid not nil, merges it by intersection
    with the grid of puzzle and assocs it into puzzle.
-   Returns a puzzle"
+   Returns the new puzzle, but only if the new is correct, the incoming
+   puzzle else."
   [puzzle new-grid]
   (if new-grid
-    (assoc puzzle
-           :grid
-           (merge-with cs/intersection (:grid puzzle) new-grid))
+    (let [m-puzzle
+          (assoc puzzle
+                 :grid
+                 (merge-with cs/intersection (:grid puzzle) new-grid))]
+      (if (is-correct-puzzle? m-puzzle) m-puzzle puzzle))
     puzzle))
 

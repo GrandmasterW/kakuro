@@ -78,12 +78,13 @@
 (defn log
   ([message]
    (if D-PRINT
-     (println (get-steps) "\t" message)
+     (println (str "#" (get-steps)) "\t" message)
      nil))
   ([method & args]
    (log
     (str 
      method "\n"
-     (s/join " | " args)))))
+     (s/join " | " args)
+     "\n"))))
 
 ;; ----------------------------------------------------------------------

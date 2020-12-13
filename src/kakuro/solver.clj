@@ -31,7 +31,7 @@
 
 (defn puzzle-variations 
   "Returns a vector of puzzles, each containing a different value at point as single value"
-  [puzzle point]
+  [point puzzle]
   (let [values (get (:grid puzzle) point)]
     (filter (comp gr/is-correct-grid? :grid)
             (mapv #(assoc-in puzzle [:grid point] #{%1}) values))))
@@ -42,30 +42,46 @@
   "Walks through the values at first-open-point, fixes them for the point and goes into solve again"
    [puzzle solutions first-open-point trail]
 
-  (let [c-puzzles (puzzle-variations puzzle first-open-point)
-        v-solutions (remove empty?
-                            (map
-                             #(solve-puzzle %1
-                                            []
-                                            (str trail "->" (pt/str-point %1)))
-                             c-puzzles))   ]
+  (let [
+        v-solutions (->> puzzle
+                         (puzzle-variations first-open-point)
+                         (map #(solve-puzzle %1 [] trail))
+                         (remove empty?))
+        ]
     (if (seq v-solutions)
       (reduce concat solutions v-solutions)
       solutions)))
+
+(defn solve-first-open
+  "returns solutions from iterating at first open point.
+   Requires a restricted puzzle and last solution coll."
+  [puzzle solutions trail]
+
+  (if-not (pu/is-correct-puzzle? puzzle)
+    solutions
+    ;; else
+    (if-let [fop (pu/first-open-point puzzle)]
+      ;; at least one open point?
+      (iterate-values puzzle solutions fop (str trail "->" (pt/str-point fop)))
+          
+      ;; nothing open? Done!
+      (save-puzzle-if solutions puzzle))))
+
 
 (defn solve-puzzle
   "Returns solutions, expanded with current, restricted puzzle, if it is a solution. Otherwise we go down to iterating the values at the first open point."
   [puzzle solutions trail]
   {:pre [(not (util/count-steps!?))]}
 
-  (lpu/log-puzzle "solve-puzzle" trail puzzle)
-  (if (not (gr/is-correct-grid? (:grid puzzle))) solutions
-    (let [r-puzzle (rst/restrict-puzzle puzzle)]
-      (if (not (gr/is-correct-grid? (:grid r-puzzle))) solutions
-        (if-let [fop (pu/first-open-point r-puzzle)] ;; at least one open point?
-          (iterate-values r-puzzle solutions fop (str trail "->" (pt/str-point fop)))
-          (save-puzzle-if solutions r-puzzle)))))) ;; nothing open? Done!
-
+;;  (lpu/log-puzzle "solve-puzzle" trail puzzle)
+  
+  (if-not (pu/is-correct-puzzle? puzzle)
+    solutions ;; done for bad: do not proceed with broken puzzle
+    (solve-first-open
+     (rst/restrict-puzzle puzzle)
+     solutions
+     trail)))
+      
 
 (defn start-solve
   "returns a collection of grids that are solutions for the puzzle, each having only one value for each grid cell, matching all criteria"

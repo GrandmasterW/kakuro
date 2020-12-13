@@ -5,6 +5,7 @@
    [kakuro.dbgpuzzle :as dbp]
    [kakuro.grid :as gr]
    [clojure.math.combinatorics :as combo]
+   [clojure.string :as s]
    )
   )
 
@@ -20,6 +21,13 @@
 ;; ----------------------------------------------------------------------
 ;;
 
+(defn valid-combi?
+  "true, if sum of coll elements equal restsum and all elements of
+   coll are distinct."
+  [restsum coll]
+  (and (= restsum (apply + coll))
+       (apply distinct? coll)))
+
 (defn find-combi-fits
   "Retrieves the potential candidates the open-points value-sets
    which build the sum of the segment.
@@ -27,25 +35,36 @@
   [grid segment open-points]
   (let [;; get open points value sets
         opvs (mapv #(get grid %1) open-points)
+
+        ;; _ (println "opvs" opvs)
         
         ;; create cartesian product, one value of each set in a list element
         cp (apply combo/cartesian-product opvs)
-            
-        ;; keep lists with sum matching the segment sum
-        fits (filter #(= (:sum segment) (apply + %1)) cp)           ]
-    fits))
 
+        ;; _ (println "cp" cp)
+        
+        ;; get open sum to look for
+        restsum (- (:sum segment) (gr/segment-value-sum grid segment))
 
+        ;;_ (println "restsum" restsum)
+        
+        ]
+    (filter (partial valid-combi? restsum) cp)))
+
+;; TO DO - WORK HERE
 (defn find-transpose-remake
   "Returns a grid of the open points assigned to potential value sets from the combination. Nil if no combinations valid"
   [grid segment open-points]
+  ;; (dbp/dbg-grid "ftr" grid)   (println "open:" open-points)
   (let [fits (find-combi-fits grid segment open-points) ]
-    
-    (if (not (seq fits)) nil
-        ;; else
-        (into {}
-              (map hash-map open-points 
-                   (map #(into #{} %1) (util/transpose fits)))))))
+
+    ;;    (util/log "ftr:fits" (s/join " / " fits))
+
+    (if-not (seq fits)
+      nil
+      (into {}
+            (map hash-map open-points 
+                 (map #(into #{} %1) (util/transpose fits)))))))
 
 (defn restrict-segment-combis
   "Restrict the combinations of values in a segment by using
@@ -54,7 +73,8 @@
   Returns the open points with new value sets as a hash-map."
   [puzzle segment]
   
-;;  (dbp/dbg-puzzle (str "RSC: " (:points segment)) puzzle)
+  ;; (dbp/dbg-puzzle (str "RSC: " (:points segment)) puzzle)
+
   (let [grid (:grid puzzle)
         seg-points (:points segment)
         open-points (gr/open-grid-points grid seg-points)
@@ -63,13 +83,10 @@
     (if (or 
          (not (seq open-points))         
          (< cnt-open 2)                     ; do not waste time for one place only
-         (> cnt-open MAX_OPEN_COMBI)) grid  ; do not compute for 9 places with 9 values...
-        ;; else
-        (if-let [change-grid (find-transpose-remake grid segment open-points)]
-         ;; (do
-;;            (dbp/dbg-puzzle (str "RSC:change-grid" (assoc puzzle :grid change-grid)))
-;; to do: restrict not valid combinations, i.e. 6 and 6
-          change-grid
-         ;; )
-          {}))))
+         (> cnt-open MAX_OPEN_COMBI))
+      grid
+      ;; else
+      (if-let [change-grid (find-transpose-remake grid segment open-points)]
+        change-grid
+        {}))))
 

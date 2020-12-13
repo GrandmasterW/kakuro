@@ -6,7 +6,6 @@
    [kakuro.logpuzzle :as lpu]
    [kakuro.dbgpuzzle :as dbp]
    [kakuro.grid :as gr]
-   [clojure.math.combinatorics :as combo]
    )
   )
 
@@ -35,8 +34,8 @@
   "Returns a hash-map of points to values, where points are assigned to segment and values result from restrictions such as open segment sum"
   [puzzle segment]
 
-  (dbp/dbg-puzzle "RSP" puzzle)
-  (util/log "RSP#segment" (:points segment))
+;;  (dbp/dbg-puzzle "RSP" puzzle)
+;;  (util/log (str "RSP#segment\t" (:points segment)))
   
   (let [grid (:grid puzzle)
         open-points (gr/open-grid-points grid (:points segment))]
@@ -44,12 +43,12 @@
     (if (seq open-points)
       (let [vrange (comp-vrange puzzle segment open-points)
 
-            _ (do (println  "\tvrange\t" vrange)                nil)
+;;            _ (do (println  "\tvrange\t" vrange)                nil)
             
             ;; assign to open points locally
             v-grid (into {} (mapv hash-map open-points (repeat vrange)))
 
-            _ (do                (println  "\tv-grid\t" v-grid) nil)
+ ;;           _ (do                (println  "v-grid\t" v-grid) nil)
             ]
         v-grid)
       {})))

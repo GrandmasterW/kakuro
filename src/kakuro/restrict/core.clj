@@ -1,14 +1,12 @@
 (ns kakuro.restrict.core
   (:require
    [kakuro.puzzle :as pu]
- ;  [kakuro.util :as util]
- ;  [kakuro.patterns :as pat]
- ;  [kakuro.logpuzzle :as lpu]
+   ;;  [kakuro.util :as util]
+   [kakuro.logpuzzle :as lpu]
    [kakuro.dbgpuzzle :as dbp]
-   [kakuro.grid :as gr]
+   ;;   [kakuro.grid :as gr]
    [kakuro.restrict.patterns :as rp]
    [kakuro.restrict.combis :as rc]
-;   [clojure.math.combinatorics :as combo]
    )
   )
 
@@ -26,7 +24,7 @@
                                  (filter #(= (:orientation %1) orientation)
                                          (:segments puzzle))))
 
-        ;; _ (do (println "RSO" "\tinterim-grid\t" interim-grid) nil )
+        ;; _ (println "RSO" "\tinterim-grid\t" interim-grid)
         ]
     interim-grid))
 
@@ -36,7 +34,7 @@
    Returns a puzzle."
   [puzzle restricter]
 
-  (if (or (not (gr/is-correct-grid? (:grid puzzle)))
+  (if (or (not (pu/is-correct-puzzle? puzzle))
           (not (pu/is-open-puzzle? puzzle)))
     puzzle
     (let [
@@ -58,26 +56,39 @@
           ]
       v-puzzle)))
 
+
+(defn lp
+  "Helper to log puzzle with puzzle as first parameter, returns puzzle"
+  [puzzle msg]
+  (lpu/log-puzzle msg puzzle)
+  puzzle)
+
+(defn restrict-loop
+  "restricts the puzzle by restricter until results do not differ any more. Returns a puzzle."
+  [puzzle restricter]
+  (let [interim (restrict-by puzzle restricter)]
+    (if (= puzzle interim) interim ; done
+        (recur interim restricter))))
+
 ;;
 ;; putting it all together
 ;; 
 (defn restrict-puzzle
-  "loop over restrictions until nothing changes. Returns maximum restricted puzzle"
+  "loop over restrictions until nothing changes. Returns maximum restricted puzzle. If puzzle is not valid, return nil. "
   [puzzle]
-  (dbp/dbg-puzzle "restrict-puzzle#1" puzzle)
 
-  (let [old-grid (:grid puzzle)
+;;  (util/log "restrict-puzzle" "start")
 
-        ;; pr: pattern restricted
-        pr-puzzle (restrict-by puzzle rp/restrict-segment-patterns)
-        _ (do (dbp/dbg-puzzle "restrict-puzzle#2" pr-puzzle) nil)
-
-        ;; improved by computing combinations
-        com-puzzle (restrict-by pr-puzzle rc/restrict-segment-combis)
-        _ (do (dbp/dbg-puzzle "restrict-puzzle#3" com-puzzle) nil)
+  (let [
+        result (-> puzzle
+                   (restrict-loop rp/restrict-segment-patterns)
+                   ;; (lp "pr")
+                   (restrict-loop rc/restrict-segment-combis)
+                   ;; (lp "cr")
+                   )
         ]
-    
-    (if (= old-grid (:grid com-puzzle))
-      (if (gr/is-correct-grid? (:grid com-puzzle)) com-puzzle puzzle)
-      (recur com-puzzle))))
-
+;;    (dbp/dbg-puzzle "restrict-puzzle#2" result)
+    (if (= result puzzle)
+      result
+      (recur result))))
+  

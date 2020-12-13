@@ -24,7 +24,7 @@
   [values]
   (cond
       (empty? values) "!!"
-      (= (count values) 1) (str (first values))
+      ;; (= (count values) 1) (str (first values))
       :else (str values)))
 
 (defn is-open-point? 
