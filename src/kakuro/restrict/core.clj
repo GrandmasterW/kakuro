@@ -3,7 +3,7 @@
    [kakuro.puzzle :as pu]
    ;;  [kakuro.util :as util]
    [kakuro.logpuzzle :as lpu]
-   [kakuro.dbgpuzzle :as dbp]
+   ;;   [kakuro.dbgpuzzle :as dbp]
    ;;   [kakuro.grid :as gr]
    [kakuro.restrict.patterns :as rp]
    [kakuro.restrict.combis :as rc]
@@ -87,7 +87,7 @@
                    ;; (lp "cr")
                    )
         ]
-;;    (dbp/dbg-puzzle "restrict-puzzle#2" result)
+    ;;    (dbp/dbg-puzzle "restrict-puzzle#2" result)
     (if (= result puzzle)
       result
       (recur result))))

@@ -9,32 +9,45 @@
    [clojure.test :refer :all]
    ))
 
+(deftest make-empty-grid-test
+  (testing "empty grid"
+    (is (= (grid/make-empty-grid) {}))))
 
 (deftest get-points-from-grid-test
-  (testing "retrieve what we've stored"
+  (testing "one segment with 5 points"
     (let [fx 1, tx 5, y 1 su 12, min 1, max 9
-          s (seg/create-row-segment fx tx y su nil)
+          s (seg/new-row fx tx y su)
           grid (cr/make-initial-grid-for-segments [s] min max)
           points (keys grid)]
       (is (= (count points) (- tx fx -1))
-          (= (empty?
-              (cs/difference
-               (into #{} points)
-               (into #{} (map #(pt/Point %1 y) (util/fullrange fx tx))))))))))
-
+          (empty?
+           (cs/difference
+            (into #{} points)
+            (into #{} (map #(pt/Point %1 y) (util/fullrange fx tx))))))))
+    (testing "5 segment with 5 points"
+    (let [fx 1, tx 5, y 1, ym 5, su 12, min 1, max 9
+          hsegs (mapv #(seg/new-row fx tx %1 su) (util/fullrange y ym))
+          grid (cr/make-initial-grid-for-segments hsegs min max)
+          points (keys grid)]
+      (is (= (count points) (* (- ym y -1)(- tx fx -1)))
+          (empty?
+           (cs/difference
+            (into #{} points)
+            (into #{} (map #(pt/Point %1 y) (util/fullrange fx tx)))))))))
 
 (deftest value-string-test
   (testing "return meaningful value"
     (is (= "1" (grid/value-string #{1})))
-    (is (= "!!" (grid/value-string #{})))
-    (is (= "#9" (grid/value-string #{1 2 3 4 5 6 7 8 9})))))
+    (is (= "!" (grid/value-string #{})))
+    (is (= "(1 2 3 4 5 6 7 8 9)" (grid/value-string #{1 2 3 4 5 6 7 8 9})))))
+
 
 (deftest is-open-point?-test
   (let [p1 (pt/Point 1 1)
         p2 (pt/Point 2 1)
-        pts #{p1 p2}
-        rs (seg/create-row-segment 1 2 1 3 pts)
-        gr {p1 #{2} p2 (into #{} (range 1 10))}
+;;        pts #{p1 p2}
+;;        rs (seg/create-row-segment 1 2 1 3 pts)
+        gr {p1 #{2}, p2 (into #{} (range 1 10))}
         gr2 (assoc gr p2 #{1})
         ]
   (testing "Point p2 is open"
@@ -43,6 +56,41 @@
     (is (not (grid/is-open-point? gr p1))))
   (testing "Point p2 is not open in gr2"
     (is (not (grid/is-open-point? gr2 p2))))))
+
+
+(deftest open-grid-points-test
+  (testing "empty"
+    (is (= 1 0))))
+            
+(deftest fixed-grid-points-test
+  (testing "empty"
+    (is (= 1 0))))
+
+(deftest segment-value-sum-test
+  (testing "empty"
+    (is (= 1 0))))
+
+(deftest points-values-unique?-test
+  (testing "empty"
+    (is (= 1 0))))
+
+(deftest all-segment-values-unique?-test
+  (testing "empty"
+    (is (= 1 0))))
+
+(deftest fixed-segment-values-unique?-test
+  (testing "empty"
+    (is (= 1 0))))
+
+(deftest is-correct-grid?-test
+  (testing "empty"
+    (is (= 1 0))))
+
+                        
+(comment
+
+
+
 
 (deftest open-grid-points-test
   (let [p1 (pt/Point 1 1)
@@ -112,3 +160,4 @@
                 (first (:segments finpuz)))))))
   )
 
+)

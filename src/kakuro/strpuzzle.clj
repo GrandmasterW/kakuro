@@ -19,12 +19,11 @@
   "returns a string for the value of each point, but just one character per point"
   [puzzle x-max row]
   (let [pgrid (:grid puzzle)]
-    (str
-     (cst/join
-      "\t"
-      (map
-       #(point-to-str pgrid %1 row)
-       (util/fullrange 1 x-max))))))
+    (cst/join
+     " "
+     (map
+      #(point-to-str pgrid %1 row)
+      (util/fullrange 1 x-max)))))
 
 (defn puzzle-to-str 
   "Returns a string of row-strings"
@@ -33,7 +32,7 @@
         x-max (first dimensions)
         y-max (second dimensions)]
     (cst/join
-     "\n"
+     "\n|"
      (mapv
       (partial puzzle-row-to-str puzzle x-max)
       (util/fullrange 1 y-max)))))

@@ -37,7 +37,7 @@
     (first coll)))
 
 ;; ----------------------------------------------------------------------
-;; parallel execution helpers
+;; parallel execution helpers - not used any longer... 
 ;;
 (def par-switch (atom 0))
 (def max-par 0)
@@ -66,9 +66,8 @@
   @steps)
 
 (defn count-steps!? []
-  (do
-    (inc-steps!)
-    (> (get-steps) MAXSTEPS)))
+  (inc-steps!)
+  (> (get-steps) MAXSTEPS))
 
 ;; ----------------------------------------------------------------------
 ;; ----------------------------------------------------------------------

@@ -1,7 +1,9 @@
 (ns kakuro.grid
 ;;  (:require [kakuro.util :as util] [kakuro.cell :as cell] [kakuro.point :as pt][kakuro.segment :as seg])
-  (:require [kakuro.util :as util]
-            ))
+  (:require
+   [kakuro.util :as util]
+   [kakuro.values :as vas]
+   ))
 
 ;; ----------------------------------------------------------------------
 ;; A grid is simply a hashmap of point -> cell, as we need to retrieve
@@ -20,12 +22,15 @@
   (into #{} (keys grid)))
 
 (defn value-string 
-  "Returns a string for the values: if only one digit is left, use that, preceeded by a point. If more than one, return # plus digit of number of values. Empty list: !!"
+  "Returns a string for the values:
+   if only one digit is left, use that.
+   If more than one, return values as string
+   For empty set: !"
   [values]
   (cond
-      (empty? values) "!!"
-      ;; (= (count values) 1) (str (first values))
-      :else (str values)))
+      (empty? values) "!"
+      (= (count values) 1) (str (first values))
+      :else (str (sort values))))
 
 (defn is-open-point? 
   "true, if point has more than one value in set"
@@ -57,23 +62,31 @@
               (map (comp (partial util/first-val 0) (partial get grid)) fixed))
       0)))
 
-(defn values-unique? 
-  "true if each set contains only one digit, and all values of all sets appear only once"
-  [value-sets]
-  (and (every? (comp (partial = 1) count) value-sets)
-       (every? (partial = 1) (vals (frequencies (mapv first value-sets))))))
-  
-(defn segment-values-unique? 
-  "True, if each value of each segment point only appears once"
-  [grid segment]
-  (let [points (:points segment)
-        value-sets (mapv (partial get grid) points)]
-    (values-unique? value-sets)))
 
+(defn points-values-unique? 
+  "True, if each value of the given points only appears once.
+   To be used in a segment, makes no sense in a whole grid!"
+  [grid points]
+  (let [value-sets (mapv (partial get grid) points)]
+    (vas/values-unique? value-sets)))
+
+(defn all-segment-values-unique?
+  "True, for if all points have unique values in a segment and have one value only."
+  [grid segment]
+  (let [points (:points segment)]
+    (and
+     (every? #(= (count %1) 1) (vas/get-value-sets grid points))
+     (points-values-unique? grid points))))
+  
+(defn fixed-segment-values-unique?
+  "True, if the values of the fixed points in the segment are unique"
+  [grid segment]
+  (points-values-unique? grid (fixed-grid-points grid (:points segment))))
+  
 (defn is-correct-grid? 
   "True, if each point has at least one value"
   [grid]
   (let [value-sets (vals grid)]
     (every? (comp (partial < 0) count) value-sets)))
          
-         
+

@@ -1,4 +1,4 @@
-(ns kakuro.restrict-test
+(ns kakuro.restrict.core-test
   (:require
    [kakuro.point :as pt]
    [kakuro.segment :as seg]
@@ -6,11 +6,13 @@
    [kakuro.grid :as grid]
    [kakuro.util :as util]
    [kakuro.puzzle :as puz]
-   [kakuro.restrict :as rst]
+   [kakuro.restrict.core :as rc]
    [clojure.set :as cs]
    [clojure.test :refer :all]
    ))
 
+(comment
+  
 (deftest restrict-segment-test
   (let [rs (seg/new-row 1 2 1 3)
         puzzle (cr/create-puzzle [rs])
@@ -45,3 +47,4 @@
           ] ;;
       (is (= (:grid res-puzzle) values1)))))
 
+)

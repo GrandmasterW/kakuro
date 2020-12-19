@@ -52,26 +52,32 @@
 ;;
 ;; predicates
 ;;
-(defn- matches-orientation? [segment orientation]
+(defn- matches-orientation? 
   "true, if orientation of segment equals orientation"
+  [segment orientation]
   (= (:orientation segment) orientation))
 
-(defn is-row-segment? [segment]
+(defn is-row-segment? 
   "true, if orientation is :h"
+  [segment]
   (matches-orientation? segment :h))
 
-(defn is-column-segment? [segment]
+(defn is-column-segment? 
   "true, if orientation is :v"
+  [segment]
   (matches-orientation? segment :v))
 
-(defn contains-point-in-set? [point segment]
+(defn contains-point-in-set?
   "true, if point is in segment according to segments set"
+  [point segment]
   (contains? (:points segment) point))
+
 
 ;; ----------------------------------------------------------------------
   
-(defn segments-for-point [point segments]
+(defn segments-for-point
   "retrieves the 2 segments a point belongs to: one row, one column"
+  [point segments]
   (filterv (partial contains-point-in-set? point) segments))
 
 

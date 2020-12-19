@@ -31,11 +31,15 @@
   (seg/new-segment orientation from-a to-a b sum))
 
 (defn into-puzzle
-  "converts a hash-map containing :rows and :columns into a valid puzzle"
+  "converts a hash-map containing :rows, :columns, and :solutions into a valid puzzle"
   [e-map]
   (let [rows (mapv (partial create-seg :h) (:rows e-map))
-        cols (mapv (partial create-seg :v) (:columns e-map)) ]
-    (cr/create-puzzle (into [] (concat rows cols)))))
+        cols (mapv (partial create-seg :v) (:columns e-map))
+        solutions (:solutions e-map)
+        puzzle     (cr/create-puzzle (into [] (concat rows cols)))
+        ]
+    (assoc puzzle :solutions solutions)))
+
 
 (defn read-puzzle
   "Reads the given file and returns a puzzle structure"

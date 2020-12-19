@@ -7,6 +7,10 @@
 ;;            [kakuro.grid :as grid]
             [clojure.test :refer :all]))
 
+
+(comment
+
+  
 (deftest count-potential-solutions-test
   (testing "check the number of potential grids by multiplying the number of values"
     (let [fa 1, ta 3, fb 1, tb 3, v 7
@@ -51,3 +55,4 @@
                         (assoc-in [:grid (pt/Point 2 2)] #{1}))]
         (is (pu/is-puzzle-valid? testpuz))))
     ))
+)

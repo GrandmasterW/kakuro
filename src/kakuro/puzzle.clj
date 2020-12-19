@@ -24,7 +24,6 @@
    :min min
    :max max})
 
-
 (defn puzzle-dimensions
   "returns a vector of x and y maximum dimensions, i.e. the max x and max y value of contained points"
    [puzzle]
@@ -38,7 +37,7 @@
   (reduce * 1N (map count (vals (:grid puzzle)))))
 
 (defn is-open-puzzle?
-  "True, if at least one open point on the grid"
+  "True-ish, if at least one open point on the grid"
    [puzzle]
   (seq (gr/open-grid-points (:grid puzzle))))
 
@@ -50,7 +49,7 @@
       (first (sort-by first (sort-by second ops)))
       nil)))
 
-(defn is-puzzle-valid?
+(defn is-puzzle-solution?
   "True, if all constraints are met: segment sums equal value sums, digits in a segment are unique"
    [puzzle]
   (let [pgrid (:grid puzzle)
@@ -58,18 +57,22 @@
     (and
      (not (is-open-puzzle? puzzle)) ; cannot be open to be valid!
      (every? #(= (:sum %1) (gr/segment-value-sum pgrid %1)) segments) ; all sums met?
-     (every? (partial gr/segment-values-unique? pgrid) segments)) ; all digits unique?
+     (every? (partial gr/all-segment-values-unique? pgrid) segments)) ; all digits unique?
     ))
 
 (defn is-correct-puzzle?
   "true if grid is correct and at least one segment exists"
   [puzzle]
   (and (gr/is-correct-grid? (:grid puzzle))
-       (seq (:segments puzzle))))
+       (> (count (:segments puzzle)) 0)))
 
-(defn correct-puzzle-only
+(defn distinct-fixed-values?
+  "true, if for each segment the values of its fixed points are distinct." 
   [puzzle]
-  (if (is-correct-puzzle? puzzle) puzzle nil))
+  (let [fixed-points (mapv #(gr/fixed-grid-points (:grid puzzle) (:points %1)) (:segments puzzle))]
+  (every?
+   #(gr/points-values-unique? (:grid puzzle) %1)
+   fixed-points)))
 
 (defn merge-puzzle-grid
   "If new-grid not nil, merges it by intersection

@@ -13,10 +13,10 @@
 ;; Constants
 ;; ----------------------------------------------------------------------
 ;;
-;; max number of places in range 0..8 for computing
+;; max number of places for computing
 ;; combinations without blowing up the machine
 ;;
-(def MAX_OPEN_COMBI 10)
+(def MAX_OPEN_COMBI 9)
 ;;
 ;; ----------------------------------------------------------------------
 ;;
@@ -51,7 +51,6 @@
         ]
     (filter (partial valid-combi? restsum) cp)))
 
-;; TO DO - WORK HERE
 (defn find-transpose-remake
   "Returns a grid of the open points assigned to potential value sets from the combination. Nil if no combinations valid"
   [grid segment open-points]

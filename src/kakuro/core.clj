@@ -4,6 +4,7 @@
    [kakuro.solver :as sol]
    [kakuro.importer :as imp]
    [kakuro.logpuzzle :as lpu]
+   [kakuro.strpuzzle :as stp]
    )
   (:gen-class))
 
@@ -19,10 +20,10 @@
   (lpu/log-start puzzle)
   (let [solutions (time (sol/start-solve puzzle))]
     (dotimes [n (count solutions)]
-      (doall
-        (lpu/log-solution n)
-        (lpu/log-puzzle (assoc puzzle :grid (nth solutions n)))
-        ))))
+      (lpu/log-solution (inc n))
+      (lpu/log-puzzle (assoc puzzle :grid (nth solutions n)))
+      (stp/print-puzzle (assoc puzzle :grid (nth solutions n)))
+        )))
 
 (defn -main
   "print"
