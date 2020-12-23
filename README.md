@@ -49,8 +49,10 @@ FIXME: listing of options this app accepts.
 
 ## Examples
 
-Row example: [3 5 3 12] defines a segment from x=3 to 5 (3 cells) in row 3 with sum 12
-Column example: [1 3 1 9] defines a segment from y=1 to 3 (4 cells) in column 1 with sum 9
+* Row example: [3 5 3 12] defines a segment from x=3 to 5 (3 cells) in row 3 with sum 12
+* Column example: [1 3 1 9] defines a segment from y=1 to 3 (4 cells) in column 1 with sum 9
+
+
 
 ### To Do 
 
