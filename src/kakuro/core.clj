@@ -30,9 +30,8 @@
   [& args]
 
   (if-let [filename (first args)]
-    (let [e-map (imp/read-puzzle-file filename)
-          puzzle (imp/into-puzzle e-map)]
-      (do-puzzle puzzle))
-    (println "Nothing to do.")
-    ))
+    
+    (do-puzzle (imp/read-puzzle filename))
+
+    (println "Nothing to do.")))
 

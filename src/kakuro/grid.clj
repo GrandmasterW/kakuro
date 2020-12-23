@@ -1,5 +1,4 @@
 (ns kakuro.grid
-;;  (:require [kakuro.util :as util] [kakuro.cell :as cell] [kakuro.point :as pt][kakuro.segment :as seg])
   (:require
    [kakuro.util :as util]
    [kakuro.values :as vas]
@@ -56,7 +55,7 @@
   "computes the sum of the values which are non-open, i.e. set to a single value"
   [grid segment]
   (let [fixed (fixed-grid-points grid (:points segment))]
-;;    (util/log "segment-value-sum" grid fixed)
+
     (if fixed
       (reduce + 0
               (map (comp (partial util/first-val 0) (partial get grid)) fixed))

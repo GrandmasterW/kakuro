@@ -1,10 +1,8 @@
 (ns kakuro.puzzle
   (:require
-   ;;[kakuro.util :as util]
    [kakuro.grid :as gr]
    [clojure.set :as cs]
-   ;;[kakuro.point :as pt]
-   ;;[clojure.pprint :as cpp]
+   [kakuro.segment :as seg]
    ))
 
 ;; ----------------------------------------------------------------------
@@ -49,6 +47,14 @@
       (first (sort-by first (sort-by second ops)))
       nil)))
 
+
+(defn all-segment-sums-done?
+  "True, if for each segment the sum equals the value in the segment."
+  [grid segments]
+  (every?
+   #(= (:sum %1) (gr/segment-value-sum grid %1))
+   segments))
+
 (defn is-puzzle-solution?
   "True, if all constraints are met: segment sums equal value sums, digits in a segment are unique"
    [puzzle]
@@ -56,7 +62,7 @@
         segments (:segments puzzle)]
     (and
      (not (is-open-puzzle? puzzle)) ; cannot be open to be valid!
-     (every? #(= (:sum %1) (gr/segment-value-sum pgrid %1)) segments) ; all sums met?
+     (all-segment-sums-done? pgrid segments)
      (every? (partial gr/all-segment-values-unique? pgrid) segments)) ; all digits unique?
     ))
 
@@ -73,6 +79,27 @@
   (every?
    #(gr/points-values-unique? (:grid puzzle) %1)
    fixed-points)))
+
+(defn assert-points-match
+  "Returns the puzzle, if it contains the same number of points
+   defined by rows as by columns. Throws an exception if not."
+  [puzzle]
+  (let [row-col-points (seg/count-point-number (:segments puzzle))
+        h-num (:h row-col-points)
+        c-num (:v row-col-points)
+        ]
+    (if-not (= h-num c-num)
+      (throw
+       (AssertionError.
+        (str "Number of defined points in rows and columns differ: rows: "
+             h-num
+             ", columns: "
+             c-num
+             ". Check your segments!" )))
+      puzzle)))
+
+
+
 
 (defn merge-puzzle-grid
   "If new-grid not nil, merges it by intersection

@@ -51,3 +51,9 @@
     [:h2 (str "Solution # " n)]
     )))
 
+
+(defn lp
+  "Helper to log puzzle with puzzle as first parameter, returns puzzle"
+  [puzzle msg]
+  (log-puzzle msg puzzle)
+  puzzle)

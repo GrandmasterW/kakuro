@@ -1,0 +1,13 @@
+
+#empty {
+    background-color: lightgray;
+}
+
+th, td {
+    border: 1px solid black;
+}
+table {
+    width:90%;
+    border-collapse: collapse; 
+    text-align: center;
+}

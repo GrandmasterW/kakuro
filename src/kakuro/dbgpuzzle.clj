@@ -1,16 +1,15 @@
 (ns kakuro.dbgpuzzle
   (:require
-   [kakuro.util :as util]
    [kakuro.strpuzzle :as stp]
-            ))
+   ))
 
 (defn dbg-puzzle
   ([puzzle]
-     (println )
-     (println (stp/puzzle-to-str puzzle)) )
+     (println "<br/>")
+     (println (stp/puzzle-to-str puzzle)) "<br/>")
   ([msg puzzle]
-   (println )
-   (println (str msg "\n") (stp/puzzle-to-str puzzle)))
+   (println "<br/>")
+   (println (str msg "<br/>\n") (stp/puzzle-to-str puzzle)) "<br/>")
   )
 
 (def x-sorter (comp first key))
@@ -21,10 +20,10 @@
 
 (defn dbg-grid
   ([grid]
-     (println )
-     (println (grid-sort grid)))
+     (println "<br/>")
+     (println (grid-sort grid) "<br/>"))
   ([msg grid]
-   (println )
-   (print msg)
+   (println "<br/>")
+   (print msg )
    (dbg-grid grid))
   )

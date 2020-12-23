@@ -49,9 +49,11 @@
 
 (defn new-row [from-x to-x y sum]
   (create-row-segment from-x to-x y sum nil))
+
 ;;
 ;; predicates
 ;;
+
 (defn- matches-orientation? 
   "true, if orientation of segment equals orientation"
   [segment orientation]
@@ -71,6 +73,21 @@
   "true, if point is in segment according to segments set"
   [point segment]
   (contains? (:points segment) point))
+
+
+(defn count-segment-point-number
+  "Returns the number of points in a segment according to
+   the from-a and to-a values. Segment from 5 to 8 has 4 points."
+  [segment]
+  (- (:to-a segment) (:from-a segment) -1))
+
+(defn count-point-number
+  "Returns a set with keys :h and :v and values as the
+   number of points in each segment orientation"
+  [segments]
+  (->> segments
+       (map #(hash-map (:orientation %1) (count-segment-point-number %1)))
+       (apply merge-with +)))
 
 
 ;; ----------------------------------------------------------------------

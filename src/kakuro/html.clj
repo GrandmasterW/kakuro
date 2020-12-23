@@ -15,20 +15,23 @@
   [segments]
   (html
    [:h2 "Segments"]
-   [:table 
+   [:table {:id "segments"}
     [:thead
      [:tr
-      [:th "Orientation"]
+      [:th "#"]
+      [:th "type"]
       [:th "from-a"]
       [:th "to-a"]
       [:th "b"]
-      [:th "sum"]
+      [:th "constraint"]
       ]
      ]
     [:tbody
-     (for [s segments]
+     (for [i (range (count segments))
+           :let [s (get segments i)]]
        [:tr
-        [:td (:orientation s)]
+        [:td (inc i)]
+        [:td (case (:orientation s) :h "row" :v "column")]
         [:td (:from-a s)]
         [:td (:to-a s)]
         [:td (:b s)]
@@ -51,6 +54,19 @@
      [:p (str "Combinations: " (pu/count-potential-solutions puzzle))]
      (segments-html (:segments puzzle)))))
 
+(defn cell-html
+  "returns a table cell content and format" 
+  [grid x y]
+  [:td
+   (if (= x 0)
+     [:b y]
+     (let [p (pt/Point x y)
+           v (get grid p)
+           ]
+       (if (seq v) (stp/values-str v)
+           {:id "empty"})))
+   ])
+
 (defn puzzle-html
   "Return a table made from puzzle grid"
   [puzzle]
@@ -71,12 +87,10 @@
             (for [y (util/fullrange 1 y-max)]
               [:tr
                (for [x (util/fullrange 0 x-max)]
-                 [:td
-                  (if (= x 0)
-                    y
-                    (stp/values-str (grid (pt/Point x y))))])
+                 (cell-html grid x y))
                ])
             ]
+
            ])))
 
 
