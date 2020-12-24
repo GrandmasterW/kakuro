@@ -1,6 +1,6 @@
-(defproject kakuro "0.1.0-SNAPSHOT"
+(defproject kakuro "1.0-SNAPSHOT"
 
-  :description "FIXME: write description"
+  :description "A simple tool for solving Kakuro puzzles, in Clojure. Only command line provided."
 
   :url "http://example.com/FIXME"
 

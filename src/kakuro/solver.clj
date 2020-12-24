@@ -74,12 +74,13 @@
     (solve-first-open (rst/restrict-puzzle puzzle) solutions)))
 
 (defn start-solve
-  "returns a collection of grids that are solutions for the puzzle, each having only one value for each grid cell, matching all criteria"
-   [puzzle]
-  (util/reset-steps!)
+  "Returns a collection of grids that are solutions for the puzzle,
+   each having only one value for each grid cell, matching all criteria.
+   If output is true, count steps and print html stats."
+  [puzzle output?]
+  (if output? (util/reset-steps!))
   (let [solutions (trampoline #(solve-puzzle puzzle []))]
-    (lpu/log-steps-solutions  (util/get-steps)
-                              (count solutions))
+    (if output? (lpu/log-steps-solutions  (util/get-steps) (count solutions)))
     solutions))
 
 

@@ -15,10 +15,11 @@
   (seg/create-column-segment fy ty x s nil))
 
 
-(defn do-puzzle [puzzle]
+(defn do-puzzle
+  [puzzle]
 
   (lpu/log-start puzzle)
-  (let [solutions (time (sol/start-solve puzzle))]
+  (let [solutions (time (sol/start-solve puzzle true))]
     (dotimes [n (count solutions)]
       (lpu/log-solution (inc n))
       (lpu/log-puzzle (assoc puzzle :grid (nth solutions n)))
