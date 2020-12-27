@@ -8,11 +8,10 @@
   {:pre [(seq m)]}
   (apply mapv vector m))
 
-
 (defn betweenl 
   "true, if from <= x <= to for integers"
   [x from to]
-  (and (>= x from) (<= x to)))
+  (<= from x to))
 
 (defn betweenr
   "changes order or parameters to allow comp, returns between x from to"

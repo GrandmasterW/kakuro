@@ -114,7 +114,7 @@ Check directory data for Kakuro puzzle examples. See doc directory for a spreads
 ## To Do 
 ### Testcases
 
-* Extend test cases, starting with automated solving of provided examples and comparing results
+* Extend test coverage to non-trivial functions in puzzle, segment and grid at least 
 * Compute a set of non-trivial Kakuro puzzles and solve them as tests.
 * Extend test cases
 

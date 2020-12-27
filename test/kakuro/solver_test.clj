@@ -17,12 +17,12 @@
     (let[puzzle (cr/create-puzzle [(seg/new-row 1 1 1 1)
                                       (seg/new-column 1 1 1 1)])
          des-result [{(pt/Point 1 1) #{1}}]]
-         (is (= (sol/start-solve puzzle) des-result))))
+         (is (= (sol/start-solve puzzle false) des-result))))
   (testing "1x1 puzzle with max value 2"
     (let[puzzle (cr/create-puzzle [(seg/new-row 1 1 1 2)
                                    (seg/new-column 1 1 1 2)])
          des-result [{(pt/Point 1 1) #{2}}]]
-      (is (= (sol/start-solve puzzle) des-result))))
+      (is (= (sol/start-solve puzzle false) des-result))))
   (testing "2x1 puzzle with max value 3 in row, 3 segments"
     (let[puzzle (cr/create-puzzle [(seg/new-row    1 2 1 3)
                                    (seg/new-column 1 1 1 1)
@@ -31,7 +31,7 @@
          des-result [{(pt/Point 1 1) #{1}
                       (pt/Point 2 1) #{2}}]
          ]
-      (is (= (sol/start-solve puzzle) des-result)))))
+      (is (= (sol/start-solve puzzle false) des-result)))))
 
 
 (def testfiles
@@ -45,7 +45,6 @@
    "data/pi88master.edn"
    "data/pw1010.edn"
    ])
-
 
 
 (defn solved?
@@ -64,20 +63,4 @@
   (testing "solving puzzles from all files in list"
     (is (every? solved? testfiles))))
 
-(comment
-  
-  (testing "solving files from list"
-    (let [puzzle (imp/read-puzzle "data/pi55hard.edn")
-          p-solutions (into {} (:solutions puzzle))
-          solutions (sol/start-solve puzzle)
-          sol-set (into {} solutions)]
-      (is (= p-solutions sol-set))))
-  (testing "solving p66med.edn"
-    (let [puzzle (imp/read-puzzle "data/p66med.edn")
-          p-solutions (into {} (:solutions puzzle))
-          solutions (sol/start-solve puzzle)
-          sol-set (into {} solutions)]
-      (is (= p-solutions sol-set))))
-  )
-      
   

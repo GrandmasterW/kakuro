@@ -1,7 +1,8 @@
 (ns kakuro.util-test
-  (:require [clojure.test :refer :all]
-            [kakuro.util :refer :all]
-            [clojure.set :as cs]))
+  (:require
+   [clojure.test :refer :all]
+   [kakuro.util :refer :all]
+   [clojure.set :as cs]))
 
 (deftest betweenl-test
   (testing "2 is between 1 and 7"
