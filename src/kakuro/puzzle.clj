@@ -98,9 +98,6 @@
              ". Check your segments!" )))
       puzzle)))
 
-
-
-
 (defn merge-puzzle-grid
   "If new-grid not nil, merges it by intersection
    with the grid of puzzle and assocs it into puzzle.
